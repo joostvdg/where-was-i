@@ -1,0 +1,33 @@
+/*
+   CSS styling examples for the Vaadin app.
+
+   Visit https://vaadin.com/docs/styling/application-theme/ for more information.
+*/
+
+/* Example: CSS class name to center align the content . */
+.centered-content {
+  margin: 0 auto;
+  max-width: 250px;
+}
+
+/* Example: the style is applied only to the textfields which have the `bordered` class name. */
+vaadin-text-field.bordered::part(input-field) {
+  box-shadow: inset 0 0 0 1px var(--lumo-contrast-30pct);
+  background-color: var(--lumo-base-color);
+}
+
+/* Custom styles for alternating row colors in Vaadin Grid */
+.v-grid .v-grid-row:nth-child(even) {
+  background-color: #f9f9f9; /* Lighter color for even rows */
+}
+
+.v-grid .v-grid-row:nth-child(odd) {
+  background-color: #ffffff; /* Darker color for odd rows */
+}
+
+
+/* Highlight row on hover */
+.v-grid-row:hover {
+  background-color: rgba(0, 123, 255, 0.1); /* Light blue background */
+  transition: background-color 0.3s ease;
+}
