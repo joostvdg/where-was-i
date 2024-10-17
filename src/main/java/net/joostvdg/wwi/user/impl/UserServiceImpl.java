@@ -3,6 +3,9 @@ package net.joostvdg.wwi.user.impl;
 import net.joostvdg.wwi.media.*;
 import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.user.UserService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -32,7 +35,7 @@ public class UserServiceImpl implements UserService {
         String email = "johndoe@example.com";
         LocalDate dateJoined = LocalDate.of(2020, 5, 15);
         LocalDate dateLastLogin = LocalDate.of(2024, 8, 10);
-        return new User(1L, accountNumber, accountType, username, email, dateJoined, dateLastLogin, progress);
+        return new User(1L, accountNumber, accountType, username, username, email, dateJoined, dateLastLogin, progress);
     }
     
     private void initUsers() {
@@ -44,7 +47,30 @@ public class UserServiceImpl implements UserService {
     // TODO: Implement this using the database
     @Override
     public User getLoggedInUser() {
-        return this.users.stream().findFirst().orElse(null);
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        OAuth2AuthenticatedPrincipal principal = (OAuth2AuthenticatedPrincipal) authentication.getPrincipal();
+
+        int idInt = 0;
+        if (principal.getAttribute("id") != null) {
+            idInt = principal.getAttribute("id");
+        }
+        long id = idInt;
+
+        // see if we already have a user with this id
+        for (User user : users) {
+            if (user.id() == id) {
+                return user;
+            }
+        }
+        // if not, create a new user
+        String username = principal.getAttribute("login");
+        String name = principal.getAttribute("name");
+        String email = principal.getAttribute("email");
+
+        User user = new User(100, String.valueOf(idInt), "GitHub", username, name, email, LocalDate.now(), LocalDate.now(), Collections.emptySet());
+        users.add(user);
+        return user;
     }
 
 

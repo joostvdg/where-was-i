@@ -1,5 +1,6 @@
 package net.joostvdg.wwi.tracking;
 
+import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.media.Media;
 import com.vaadin.flow.component.button.Button;
@@ -21,6 +22,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Route(value = "watchlist", layout = MainView.class)
+@PermitAll
 @PageTitle("Watchlist | Where Was I?")
 public class WatchListView extends VerticalLayout {
 

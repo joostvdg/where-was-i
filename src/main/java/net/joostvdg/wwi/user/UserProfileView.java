@@ -5,10 +5,12 @@ import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
 
 @Route(value = "profile", layout = MainView.class)
 @PageTitle("Profile | Where Was I?")
+@PermitAll
 public class UserProfileView extends VerticalLayout {
 
     private final UserService userService;

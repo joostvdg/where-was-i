@@ -22,6 +22,7 @@ import com.vaadin.flow.router.BeforeEvent;
 import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
+import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.media.*;
 import com.vaadin.flow.component.textfield.TextField;
@@ -35,6 +36,7 @@ import java.util.stream.Collectors;
 
 @Route(value = "watchlist-details", layout = MainView.class)
 @PageTitle("Watchlist Details | Where Was I?")
+@PermitAll
 public class WatchListDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
     public static final String FINISHED = "Finished";

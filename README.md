@@ -54,6 +54,13 @@ Vaadin web applications are full-stack and include both client-side and server-s
 | &nbsp;&nbsp;&nbsp;&nbsp;`Application.java` | Server entrypoint |
 | &nbsp;&nbsp;&nbsp;&nbsp;`AppShell.java`    | application-shell configuration |
 
+
+## GitHub Principal Attributes
+
+* login: joostvdg
+* id: 539630
+* name: Joost van der Griendt
+
 ## Useful links
 
 - Read the documentation at [vaadin.com/docs](https://vaadin.com/docs).

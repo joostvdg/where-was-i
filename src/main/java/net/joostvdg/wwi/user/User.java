@@ -9,6 +9,7 @@ public record User(
         String accountNumber,
         String accountType,
         String username,
+        String name,
         String email,
         LocalDate dateJoined,
         LocalDate dateLastLogin,
