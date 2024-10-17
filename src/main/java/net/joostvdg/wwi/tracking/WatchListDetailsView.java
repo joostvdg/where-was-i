@@ -264,6 +264,9 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         // Media details
         formLayout.addFormItem(new Span(progress.getMedia().getTitle()), TITLE);
         formLayout.addFormItem(new Span(progress.getMedia().getPlatform()), PLATFORM);
+        if (progress.getMedia() instanceof Movie movie) {
+            formLayout.addFormItem(new Span(String.valueOf(movie.durationInMinutes())), "Duration (in minutes)");
+        }
 
         // Progress details
         formLayout.addFormItem(new Span(progress.isFavorite() ? "Yes" : "No"), FAVORITE);
@@ -349,46 +352,15 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
             achievementsProgressField.setValue(progressMap.getOrDefault("achievements", 0).toString());
             formLayout.addFormItem(achievementsProgressField, "Achievements");
 
-            // Save button
-//            Button saveButton = new Button("Save", event -> {
-//                try {
-//                    // Update the progress map with the new values
-//                    progressMap.put("main", Integer.parseInt(mainProgressField.getValue()));
-//                    progressMap.put("side", Integer.parseInt(sideProgressField.getValue()));
-//                    progressMap.put("collectibles", Integer.parseInt(collectiblesProgressField.getValue()));
-//                    progressMap.put("achievements", Integer.parseInt(achievementsProgressField.getValue()));
-//
-//                    // Update the progress in the original VideoGameProgress object
-//                    videoGameProgress.getProgress().putAll(progressMap);
-//
-//                    Notification.show("Video game progress updated!");
-//
-//                    editDialog.close();
-//                } catch (NumberFormatException e) {
-//                    Notification.show("Invalid input. Please enter valid percentages.", 3000, Notification.Position.MIDDLE);
-//                }
-//            });
-//
-//            Button cancelButton = new Button("Cancel", event -> editDialog.close());
-//
-//            editDialog.add(formLayout, new HorizontalLayout(saveButton, cancelButton));
-//            editDialog.open();
+        } else if (progress.getMedia() instanceof Movie) {
+            TextField mainProgressField = new TextField("Minutes Watched");
+            mainProgressField.setValue(progressMap.getOrDefault("Minutes Watched", 0).toString());
+            formLayout.addFormItem(mainProgressField, "Minutes Watched");
+            mainProgressField.addValueChangeListener(e -> progressMap.put("Minutes Watched", Integer.parseInt(e.getValue())));
         }
-        // TODO: enable when Movie is implemented
-//        else if (progress.getMedia() instanceof Movie movie) {
-//            // For Movie, allow editing the percentage progress
-//            TextField movieProgressField = new TextField("Progress (%)");
-//            movieProgressField.setValue(progress.getProgress().get("Progress").toString());
-//            formLayout.add(movieProgressField);
-//
-//            // Update progress map when the field changes
-//            movieProgressField.addValueChangeListener(e -> {
-//                progress.getProgress().put("Progress", Integer.parseInt(e.getValue()));
-//            });
-//        }
 
         // Save button
-        Button saveButton = new Button("Save", event -> {
+        Button updateButton = new Button("Update", event -> {
             logger.info("Updated progressMap: " + progressMap.toString());
 
             // ceate a new Progress object with the updated progress map
@@ -397,6 +369,8 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 updatedProgress = new SeriesProgress(progress.getId(), finishedCheckbox.getValue(), (Series) progress.getMedia(), progressMap, favoriteCheckbox.getValue());
             } else if (progress instanceof VideoGameProgress) {
                 updatedProgress = new VideoGameProgress(progress.getId(), progressMap, finishedCheckbox.getValue(), (VideoGame) progress.getMedia(), favoriteCheckbox.getValue());
+            } else if (progress.getMedia() instanceof Movie) {
+                updatedProgress = new MovieProgress(progress.getId(), (Movie) progress.getMedia(), progressMap, favoriteCheckbox.getValue(), finishedCheckbox.getValue());
             }
 
             if (updatedProgress == null) {
@@ -416,7 +390,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
         Button cancelButton = new Button("Cancel", event -> editDialog.close());
 
-        editDialog.add(formLayout, new HorizontalLayout(saveButton, cancelButton));
+        editDialog.add(formLayout, new HorizontalLayout(updateButton, cancelButton));
         editDialog.open();
     }
 
@@ -481,7 +455,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
                 var user = userService.getLoggedInUser();
                 // long id, Movie movie, Map<String, Integer> progress, boolean favorite, boolean finished
-                MovieProgress movieProgress = new MovieProgress(0, newMovie, Map.of(), false, false);
+                MovieProgress movieProgress = new MovieProgress(0, newMovie, Map.of("Minutes Watched", 0), false, false);
                 movieService.save(newMovie);
                 userService.addProgress(user, movieProgress);
                 populateProgressGrid(progressGrid);
