@@ -10,6 +10,7 @@ public record Movie(
         String platform,
         String director,
         int durationInMinutes,
+        int releaseYear,
         Set<String> genre,
         Optional<String> url, // URL for the series, optional
         Optional<Map<String, String>> tags // Optional tags (e.g., {"Director": "John Doe", "Country": "USA"})

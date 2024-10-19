@@ -1,7 +1,9 @@
 package net.joostvdg.wwi.tracking;
 
 import net.joostvdg.wwi.media.Progress;
+import net.joostvdg.wwi.user.User;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -13,4 +15,6 @@ public interface WatchlistService {
     Optional<WatchList> getWatchlistById(Long id);
 
     Set<Progress> getProgressForWatchlist(WatchList watchList);
+
+    List<WatchList> getWatchListsForUser(User user);
 }

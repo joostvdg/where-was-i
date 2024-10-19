@@ -1,17 +1,16 @@
 package net.joostvdg.wwi.tracking.impl;
 
-import net.joostvdg.wwi.media.Media;
 import net.joostvdg.wwi.media.Progress;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
+import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.user.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -22,6 +21,8 @@ public class WatchlistServiceImpl implements WatchlistService {
     private final UserService userService;
 
     private final AtomicInteger idCounter = new AtomicInteger(1);
+
+    private final Logger logger = LoggerFactory.getLogger(WatchlistServiceImpl.class);
 
     public WatchlistServiceImpl(UserService userService) {
         this.userService = userService;
@@ -66,9 +67,17 @@ public class WatchlistServiceImpl implements WatchlistService {
         // retrieve the progress from the user
         var progresses = user.progress();
         // filter the progresses to only include the ones that are part of the watchlist
+        logger.info("Retrieving progresses for user {}: {}", user.username(), progresses);
 
         return progresses.stream()
                 .filter(progress -> watchList.getItems().contains(progress.getMedia()))
                 .collect(Collectors.toSet());
+    }
+
+    @Override
+    public List<WatchList> getWatchListsForUser(User user) {
+        return watchLists.stream()
+                .filter(watchList -> watchList.getOwner().username().equals(user.username()))
+                .collect(Collectors.toList());
     }
 }

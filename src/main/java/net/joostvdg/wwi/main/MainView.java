@@ -13,6 +13,7 @@ import com.vaadin.flow.component.sidenav.SideNavItem;
 import com.vaadin.flow.server.VaadinServletRequest;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.PermitAll;
+import net.joostvdg.wwi.media.MovieListView;
 import net.joostvdg.wwi.tracking.WatchListView;
 import net.joostvdg.wwi.user.UserProfileView;
 import org.slf4j.Logger;
@@ -56,10 +57,13 @@ public class MainView extends AppLayout {
         SideNavItem watchListLink = new SideNavItem("Watch List",
                 WatchListView.class, VaadinIcon.LIST.create());
 
+        SideNavItem moviestLink = new SideNavItem("Movies",
+                MovieListView.class, VaadinIcon.MOVIE.create());
+
         SideNavItem vaadinLink = new SideNavItem("Vaadin website",
                 "https://vaadin.com", VaadinIcon.VAADIN_H.create());
 
-        nav.addItem(homeLink, profileLink, watchListLink, vaadinLink);
+        nav.addItem(homeLink, profileLink, watchListLink,moviestLink, vaadinLink);
 
         Scroller scroller = new Scroller(nav);
         scroller.setClassName(LumoUtility.Padding.SMALL);

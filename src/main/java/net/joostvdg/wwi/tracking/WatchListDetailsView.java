@@ -253,12 +253,6 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
     }
 
-    private Set<String> getAllPlatforms(WatchList watchList) {
-        // Extract all unique platforms from the media list
-        // return mediaList.stream().map(Media::getPlatform).collect(Collectors.toSet());
-        return watchList.getItems().stream().map(Media::getPlatform).collect(Collectors.toSet());
-    }
-
     private void openViewDialog(Progress progress) {
         Dialog viewDialog = new Dialog();
         FormLayout formLayout = new FormLayout();
@@ -400,6 +394,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
     private void populateProgressGrid(Grid<Progress> progressGrid) {
         Set<Progress> progresses = watchlistService.getProgressForWatchlist(currentWatchList);
+        logger.info("Progresses: " + progresses);
         dataProvider = new ListDataProvider<>(progresses);
         progressGrid.setDataProvider(dataProvider);
 //        progressGrid.setItems(progresses);
@@ -415,6 +410,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         TextField platformField = new TextField("Platform");
         TextField directorField = new TextField("Director");
         TextField durationField = new TextField("Duration (in minutes)");
+        TextField releaseYearField = new TextField("Release Year (YYYY)");
         TextField genreField = new TextField("Genres (comma-separated)");
         TextField urlField = new TextField("URL (optional)");
 
@@ -446,13 +442,14 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 String title = titleField.getValue();
                 String platform = platformField.getValue();
                 String director = directorField.getValue();
+                int releaseYear = Integer.parseInt(releaseYearField.getValue());
                 int duration = Integer.parseInt(durationField.getValue());
                 Set<String> genres = new HashSet<>(Arrays.asList(genreField.getValue().split(",\\s*")));
                 Optional<String> url = urlField.isEmpty() ? Optional.empty() : Optional.of(urlField.getValue());
                 Optional<Map<String, String>> optionalTags = tags.isEmpty() ? Optional.empty() : Optional.of(tags);
 
                 // Create new Movie and add it to the WatchList
-                Movie newMovie = new Movie(0, title, platform, director, duration, genres, url, optionalTags);
+                Movie newMovie = new Movie(0, title, platform, director, duration, releaseYear, genres, url, optionalTags);
                 currentWatchList.getItems().add(newMovie);
 
                 var user = userService.getLoggedInUser();
@@ -469,6 +466,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 platformField.clear();
                 directorField.clear();
                 durationField.clear();
+                releaseYearField.clear();
                 genreField.clear();
                 urlField.clear();
                 tags.clear();
@@ -484,7 +482,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         Button cancelButton = new Button("Cancel", event -> dialog.close());
 
         // Add components to the dialog
-        formLayout.add(titleField, platformField, directorField, durationField, genreField, urlField);
+        formLayout.add(titleField, platformField, directorField, durationField,releaseYearField, genreField, urlField);
         dialog.add(formLayout, tagsKeyField, tagsValueField, addTagButton, tagContainer, new HorizontalLayout(saveButton, cancelButton));
         dialog.open();
     }
