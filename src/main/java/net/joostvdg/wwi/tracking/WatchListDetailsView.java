@@ -661,15 +661,15 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
                 // Create new VideoGame and add it to the WatchList
                 VideoGame newVideoGame = new VideoGame(0, title, platform, genres, publisher, developer, year, optionalTags);
+                videoGameService.addVideoGame(newVideoGame);
                 currentWatchList.getItems().add(newVideoGame);
 
                 // Create SeriesProgress for this new series
                 var user = userService.getLoggedInUser();
                 VideoGameProgress videoGameProgress = new VideoGameProgress(0, Map.of(),false, newVideoGame,  false);
-                videoGameService.addVideoGame(newVideoGame);
                 userService.addProgress(user, videoGameProgress);
-                populateProgressGrid(progressGrid);
 
+                populateProgressGrid(progressGrid);
                 Notification.show("New video game added: " + title);
 
                 // Clear the fields
