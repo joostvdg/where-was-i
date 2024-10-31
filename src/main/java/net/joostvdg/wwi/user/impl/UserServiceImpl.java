@@ -24,27 +24,12 @@ public class UserServiceImpl implements UserService {
     private final Object lock = new Object();
 
     private final AtomicInteger progressIdCounter = new AtomicInteger(1);
+    private final AtomicInteger userIdCounter = new AtomicInteger(1);
 
     private final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
     public UserServiceImpl() {
         this.users = new HashSet<>();
-        initUsers();
-    }
-
-    private User createDummyUser( Set<Progress> progress) {
-        String accountNumber = "1234567890";
-        String accountType = "Premium";
-        String username = "johndoe";
-        String email = "johndoe@example.com";
-        LocalDate dateJoined = LocalDate.of(2020, 5, 15);
-        LocalDate dateLastLogin = LocalDate.of(2024, 8, 10);
-        return new User(1L, accountNumber, accountType, username, username, email, dateJoined, dateLastLogin, progress);
-    }
-    
-    private void initUsers() {
-        User user1 = createDummyUser(new HashSet<>());
-        this.users.add(user1);
     }
 
 
@@ -57,7 +42,7 @@ public class UserServiceImpl implements UserService {
         String username = principal.getAttribute("login");
 
         for (User user : users) {
-            if (user.username().equals(username)) {
+            if (user.username().equals(username)) { // TODO: should this be go via ID when we have a database?
                 return user;
             }
         }
@@ -66,19 +51,12 @@ public class UserServiceImpl implements UserService {
         if (principal.getAttribute("id") != null) {
             idInt = principal.getAttribute("id");
         }
-        long id = idInt;
 
-        // see if we already have a user with this id
-        for (User user : users) {
-            if (user.id() == id) {
-                return user;
-            }
-        }
         // if not, create a new user
         String name = principal.getAttribute("name");
         String email = principal.getAttribute("email");
 
-        User user = new User(100, String.valueOf(idInt), "GitHub", username, name, email, LocalDate.now(), LocalDate.now(), Collections.emptySet());
+        User user = new User(userIdCounter.getAndIncrement(), String.valueOf(idInt), "GitHub", username, name, email, LocalDate.now(), LocalDate.now(), new HashSet<>());
         users.add(user);
         return user;
     }
@@ -91,12 +69,12 @@ public class UserServiceImpl implements UserService {
             synchronized (lock) {
                 // replace the user, as it is immutable
                 users.remove(user);
-                Set<Progress> progresses = user.progress();
+                Set<Progress> progresses = new HashSet<>(user.progress());
                 // find existing progress by ID
                 progresses.removeIf(p -> p.getId() == progress.getId());
                 progresses.add(progress);
-                User user1 = createDummyUser(progresses);
-                users.add(user1);
+                User updatedUser = cloneUserWithUpdatedProgress(user, progresses);
+                users.add(updatedUser);
                 lock.notifyAll();
             }
         }
@@ -115,7 +93,7 @@ public class UserServiceImpl implements UserService {
         }
 
 
-        if (progress.getId() > 0 && user.progress().contains(progress.getId() )) {
+        if (progress.getId() > 0 && containsProgress(user, progress)) {
             throw new IllegalArgumentException("SeriesProgress already exists");
         }
 
@@ -139,16 +117,27 @@ public class UserServiceImpl implements UserService {
         if (userExists(user)) {
             synchronized (lock) {
                 // replace the user, as it is immutable
-                users.remove(user);
+
                 Set<Progress> progresses = new HashSet<>(user.progress());
                 progresses.add(progressWithId);
                 User user1 = cloneUserWithUpdatedProgress(user, progresses);
                 logger.info("User has the following progresses: {}", user1.progress());
+                var userToRemove = users.stream().filter(u -> u.username().equals(user.username())).findFirst().orElseThrow(() -> new IllegalArgumentException("User does not exist"));
+                users.remove(userToRemove);
                 users.add(user1);
                 logger.info("Added progress to user: {}", user1);
                 lock.notifyAll();
             }
         }
+    }
+
+    private boolean containsProgress(User user, Progress newProgress) {
+        for (Progress progress : user.progress()) {
+            if (progress.getId() == newProgress.getId()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean userExists(User user) {
