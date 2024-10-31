@@ -19,6 +19,11 @@ public record VideoGame(long id, String title, String platform, Set<String> genr
     }
 
     @Override
+    public long getId() {
+        return id;
+    }
+
+    @Override
     public String toString() {
         return title + " (" + year + ")";
     }
@@ -43,11 +48,26 @@ public record VideoGame(long id, String title, String platform, Set<String> genr
         return String.join(", ", genre);
     }
 
+
     @Override
     public String getTags() {
         return tags.map(tagMap -> tagMap.entrySet().stream()
                         .map(entry -> entry.getKey() + ": " + entry.getValue())
                         .reduce("", (s1, s2) -> s1 + ", " + s2))
                 .orElse("");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        VideoGame videoGame = (VideoGame) o;
+        return id == videoGame.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
     }
 }

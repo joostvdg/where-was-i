@@ -92,26 +92,23 @@ public class UserServiceImpl implements UserService {
             throw new IllegalArgumentException("SeriesProgress cannot be null");
         }
 
+        if (progress.getMedia() == null) {
+            throw new IllegalArgumentException("Media cannot be null");
+        }
 
         if (progress.getId() > 0 && containsProgress(user, progress)) {
             throw new IllegalArgumentException("SeriesProgress already exists");
         }
 
-        Progress progressWithId = null;
-        switch (progress) {
-            case SeriesProgress seriesProgress:
-                progressWithId = new SeriesProgress(progressIdCounter.getAndIncrement(), seriesProgress.finished(), seriesProgress.getMedia(), seriesProgress.getProgress(), seriesProgress.favorite());
-                break;
-            case VideoGameProgress videoGameProgress:
-                progressWithId = new VideoGameProgress(progressIdCounter.getAndIncrement(), videoGameProgress.getProgress(), videoGameProgress.finished(), (VideoGame) videoGameProgress.getMedia(), videoGameProgress.favorite());
-                break;
-            case MovieProgress movieProgress:
-                progressWithId = new MovieProgress(progressIdCounter.getAndIncrement(), movieProgress.getMedia(), movieProgress.getProgress(), movieProgress.favorite(), movieProgress.finished());
-                break;
-            default:
-                throw new IllegalArgumentException("Unsupported progress type");
-        }
-        // create new progress with id from idCounter
+        Progress progressWithId = switch (progress) {
+            case SeriesProgress seriesProgress ->
+                    new SeriesProgress(progressIdCounter.getAndIncrement(), seriesProgress.finished(), seriesProgress.getMedia(), seriesProgress.getProgress(), seriesProgress.favorite());
+            case VideoGameProgress videoGameProgress ->
+                    new VideoGameProgress(progressIdCounter.getAndIncrement(), videoGameProgress.getProgress(), videoGameProgress.finished(), (VideoGame) videoGameProgress.getMedia(), videoGameProgress.favorite());
+            case MovieProgress movieProgress ->
+                    new MovieProgress(progressIdCounter.getAndIncrement(), movieProgress.getMedia(), movieProgress.getProgress(), movieProgress.favorite(), movieProgress.finished());
+            default -> throw new IllegalArgumentException("Unsupported progress type");
+        };
 
         // TODO: replace when using a database
         if (userExists(user)) {
@@ -133,7 +130,7 @@ public class UserServiceImpl implements UserService {
 
     private boolean containsProgress(User user, Progress newProgress) {
         for (Progress progress : user.progress()) {
-            if (progress.getId() == newProgress.getId()) {
+            if (progress.getId() == newProgress.getId() || progress.getMedia().getId() == newProgress.getMedia().getId()) {
                 return true;
             }
         }

@@ -24,6 +24,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
+import net.joostvdg.wwi.main.ViewNotifications;
 import net.joostvdg.wwi.media.*;
 import com.vaadin.flow.component.textfield.TextField;
 import net.joostvdg.wwi.user.UserService;
@@ -426,12 +427,12 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
             if (!key.isEmpty() && !value.isEmpty()) {
                 tags.put(key, value);
-                Notification.show("Tag added: " + key + " = " + value);
+                ViewNotifications.showSuccessNotification("Tag added: " + key + " = " + value);
                 tagContainer.add(new Span(key + ": " + value));  // Display the added tag
                 tagsKeyField.clear();
                 tagsValueField.clear();
             } else {
-                Notification.show("Tag key and value must not be empty.", 3000, Notification.Position.MIDDLE);
+                ViewNotifications.showErrorNotification("Tag key and value must not be empty.");
             }
         });
 
@@ -450,16 +451,15 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
                 // Create new Movie and add it to the WatchList
                 Movie newMovie = new Movie(0, title, platform, director, duration, releaseYear, genres, url, optionalTags);
+                newMovie = movieService.save(newMovie);
                 currentWatchList.getItems().add(newMovie);
 
                 var user = userService.getLoggedInUser();
-                // long id, Movie movie, Map<String, Integer> progress, boolean favorite, boolean finished
                 MovieProgress movieProgress = new MovieProgress(0, newMovie, Map.of("Minutes Watched", 0), false, false);
-                movieService.save(newMovie);
                 userService.addProgress(user, movieProgress);
                 populateProgressGrid(progressGrid);
 
-                Notification.show("New movie added: " + title);
+                ViewNotifications.showSuccessNotification("New movie added: " + title);
 
                 // Clear the fields
                 titleField.clear();
@@ -475,7 +475,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 // Close the dialog
                 dialog.close();
             } catch (NumberFormatException e) {
-                Notification.show("Invalid input. Please enter valid numbers for ID and duration.", 3000, Notification.Position.TOP_CENTER);
+                ViewNotifications.showErrorNotification("Invalid input. Please enter valid numbers for ID and duration.");
             }
         });
 
@@ -574,6 +574,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 // Create new Series and add it to the WatchList
                 // Please read the Series record, and generate a proper constructor call
                 Series newSeries = new Series(0, title, genres, seasons, platform, url, Optional.of(releaseDate), endYear, Optional.of(tags));
+                newSeries = seriesService.addSeries(newSeries);
                 currentWatchList.getItems().add(newSeries);
 
                 // Create SeriesProgress for this new series
@@ -582,10 +583,10 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 seasons.forEach((season, episodes) -> progressMap.put(season, 0));
                 var user = userService.getLoggedInUser();
                 SeriesProgress seriesProgress = new SeriesProgress(0, false, newSeries, progressMap, false);
-                seriesService.addSeries(newSeries);
                 userService.addProgress(user, seriesProgress);
                 populateProgressGrid(progressGrid);
-                Notification.show("New series added and progress created for: " + title);
+
+                ViewNotifications.showSuccessNotification("New series added: " + title);
 
                 // Clear the fields
                 titleField.clear();
@@ -601,7 +602,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 // Close the dialog
                 dialog.close();
             } catch (NumberFormatException e) {
-                Notification.show("Invalid input for release year or number of episodes.");
+                ViewNotifications.showErrorNotification("Invalid input. Please enter valid numbers for ID and duration.");
             }
         });
 
@@ -637,12 +638,12 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
             if (!key.isEmpty() && !value.isEmpty()) {
                 tags.put(key, value);
-                Notification.show("Tag added: " + key + " = " + value);
+                ViewNotifications.showSuccessNotification("Tag added: " + key + " = " + value);
                 tagContainer.add(new Span(key + ": " + value));  // Display the added tag
                 tagsKeyField.clear();
                 tagsValueField.clear();
             } else {
-                Notification.show("Tag key and value must not be empty.", 3000, Notification.Position.MIDDLE);
+                ViewNotifications.showErrorNotification("Tag key and value must not be empty.");
             }
         });
 
@@ -661,7 +662,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
                 // Create new VideoGame and add it to the WatchList
                 VideoGame newVideoGame = new VideoGame(0, title, platform, genres, publisher, developer, year, optionalTags);
-                videoGameService.addVideoGame(newVideoGame);
+                newVideoGame = videoGameService.addVideoGame(newVideoGame);
                 currentWatchList.getItems().add(newVideoGame);
 
                 // Create SeriesProgress for this new series
@@ -670,7 +671,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 userService.addProgress(user, videoGameProgress);
 
                 populateProgressGrid(progressGrid);
-                Notification.show("New video game added: " + title);
+                ViewNotifications.showSuccessNotification("New video game added: " + title);
 
                 // Clear the fields
                 titleField.clear();
@@ -685,7 +686,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 // Close the dialog
                 dialog.close();
             } catch (NumberFormatException e) {
-                Notification.show("Invalid input for ID or Year.", 3000, Notification.Position.MIDDLE);
+                ViewNotifications.showErrorNotification("Invalid input for ID or Year.");
             }
         });
 

@@ -52,4 +52,18 @@ public record VideoGameProgress(
     public Media getMedia() {
         return videoGame;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        VideoGameProgress that = (VideoGameProgress) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
+    }
 }

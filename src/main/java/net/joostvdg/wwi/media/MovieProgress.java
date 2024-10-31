@@ -28,4 +28,18 @@ public record MovieProgress(long id, Movie movie, Map<String, Integer> progress,
     public boolean isFinished() {
         return finished;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MovieProgress that = (MovieProgress) o;
+        return id == that.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
+    }
 }

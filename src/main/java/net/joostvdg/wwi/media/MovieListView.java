@@ -5,9 +5,11 @@ import com.vaadin.flow.component.combobox.ComboBox;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Span;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
+import com.vaadin.flow.component.notification.NotificationVariant;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
 import com.vaadin.flow.component.textfield.TextField;
@@ -17,6 +19,7 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.data.provider.ListDataProvider;
 import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
+import net.joostvdg.wwi.main.ViewNotifications;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
@@ -172,6 +175,8 @@ public class MovieListView extends VerticalLayout {
         dialog.open();
     }
 
+
+
     private void openAddToWatchlistDialog(Movie movie) {
         Dialog dialog = new Dialog();
         FormLayout formLayout = new FormLayout();
@@ -188,14 +193,21 @@ public class MovieListView extends VerticalLayout {
         // Add button to add movie to selected watchlist
         Button addToWatchlistButton = new Button("Add", event -> {
             WatchList selectedWatchlist = watchlistComboBox.getValue();
-            if (selectedWatchlist != null) {
-                selectedWatchlist.getItems().add(movie);
-                createMovieProgressForUser(user, movie);
-                Notification.show("Movie added to watchlist: " + selectedWatchlist.getName());
-                dialog.close();
-            } else {
-                Notification.show("Please select a watchlist", 3000, Notification.Position.MIDDLE);
+            if (selectedWatchlist == null) {
+                ViewNotifications.showErrorNotification("Please select a watchlist");
+                return;
             }
+
+            if (selectedWatchlist.getItems().contains(movie)) {
+                ViewNotifications.showErrorNotification("Movie already exists in watchlist: " + selectedWatchlist.getName());
+                dialog.close();
+                return;
+            }
+
+            selectedWatchlist.getItems().add(movie);
+            createMovieProgressForUser(user, movie);
+            ViewNotifications.showSuccessNotification("Movie added to watchlist: " + selectedWatchlist.getName());
+            dialog.close();
         });
 
         Button cancelButton = new Button("Cancel", event -> dialog.close());
@@ -277,18 +289,16 @@ public class MovieListView extends VerticalLayout {
                 Optional<String> url = urlField.isEmpty() ? Optional.empty() : Optional.of(urlField.getValue());
 
                 // Create new Movie object
-                Movie newMovie = new Movie(
-                        dataProvider.getItems().size() + 1L, // Example ID, you can change this logic
-                        title, platform, director, duration, releaseYear, genres, url, Optional.empty());
+                Movie newMovie = new Movie(0L,title, platform, director, duration, releaseYear, genres, url, Optional.empty());
 
                 // Save movie using service and update grid
-                movieService.save(newMovie);
+                newMovie = movieService.save(newMovie);
                 repoplateList(newMovie);
-                Notification.show("New movie added: " + title);
+                ViewNotifications.showSuccessNotification("New movie added: " + title);
 
                 dialog.close();
             } catch (NumberFormatException e) {
-                Notification.show("Invalid input for duration or release year.", 3000, Notification.Position.MIDDLE);
+                ViewNotifications.showErrorNotification("Invalid input for duration or release year.");
             }
         });
 

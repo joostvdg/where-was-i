@@ -17,6 +17,11 @@ public record Movie(
 ) implements Media {
 
     @Override
+    public long getId() {
+        return id;
+    }
+
+    @Override
     public String getType() {
         return "";
     }
@@ -43,5 +48,19 @@ public record Movie(
                         .map(entry -> entry.getKey() + ": " + entry.getValue())
                         .reduce("", (s1, s2) -> s1 + ", " + s2))
                 .orElse("");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Movie movie = (Movie) o;
+        return id == movie.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
     }
 }

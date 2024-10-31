@@ -22,7 +22,7 @@ public class VideoGameServiceImpl implements VideoGameService {
 
 
     @Override
-    public void addVideoGame(VideoGame videoGame) {
+    public VideoGame addVideoGame(VideoGame videoGame) {
         VideoGame newVideoGame = videoGame;
         if (videoGame.id() == 0) {
             newVideoGame = new VideoGame(idCounter.getAndIncrement(), videoGame.title(), videoGame.platform(), videoGame.genre(), videoGame.publisher(), videoGame.developer(), videoGame.year(), videoGame.tags());
@@ -31,6 +31,7 @@ public class VideoGameServiceImpl implements VideoGameService {
             throw new IllegalStateException("VideoGame already exists");
         }
         videoGames.add(newVideoGame);
+        return newVideoGame;
     }
 
     @Override

@@ -33,6 +33,10 @@ public record Series(
     }
 
     @Override
+    public long getId() {
+        return id;
+    }
+    @Override
     public String getType() {
         return "Series";
     }
@@ -53,6 +57,8 @@ public record Series(
         return String.join(", ", genre);
     }
 
+
+
     @Override
     public String getTags() {
         // Convert the map of tags to a comma-separated string
@@ -60,5 +66,19 @@ public record Series(
                 .map(entry -> entry.getKey() + ": " + entry.getValue())
                 .reduce("", (s1, s2) -> s1 + ", " + s2))
                 .orElse("");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Series series = (Series) o;
+        return id == series.id;
+    }
+
+    @Override
+    public int hashCode() {
+        return Long.hashCode(id);
     }
 }

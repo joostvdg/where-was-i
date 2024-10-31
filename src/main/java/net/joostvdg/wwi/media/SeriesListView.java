@@ -22,6 +22,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
+import net.joostvdg.wwi.main.ViewNotifications;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
@@ -175,17 +176,9 @@ public class SeriesListView extends VerticalLayout {
                 // Create new Series and add it to the WatchList
                 // Please read the Series record, and generate a proper constructor call
                 Series newSeries = new Series(0, title, genres, seasons, platform, url, Optional.of(releaseDate), endYear, Optional.of(tags));
-
-                // Create SeriesProgress for this new series
-                // create ProgressMap for each Season, setting the progress to 1
-                Map<String, Integer> progressMap = new HashMap<>();
-                seasons.forEach((season, episodes) -> progressMap.put(season, 0));
-                var user = userService.getLoggedInUser();
-                SeriesProgress seriesProgress = new SeriesProgress(0, false, newSeries, progressMap, false);
-                seriesService.addSeries(newSeries);
-                userService.addProgress(user, seriesProgress);
+                newSeries = seriesService.addSeries(newSeries);
                 refreshGrid(newSeries);
-                Notification.show("New series added and progress created for: " + title);
+                ViewNotifications.showSuccessNotification("New series added and progress created for: " + title);
 
                 // Clear the fields
                 titleField.clear();
@@ -201,7 +194,7 @@ public class SeriesListView extends VerticalLayout {
                 // Close the dialog
                 dialog.close();
             } catch (NumberFormatException e) {
-                Notification.show("Invalid input for release year or number of episodes.");
+                ViewNotifications.showErrorNotification("Invalid input for release year or number of episodes.");
             }
         });
 
@@ -382,17 +375,21 @@ public class SeriesListView extends VerticalLayout {
 
         Button addToWatchListButton = new Button("Add", event -> {
             WatchList selectedWatchList = watchListComboBox.getValue();
-            if (selectedWatchList != null) {
-                selectedWatchList.getItems().add(series);
-
-                SeriesProgress seriesProgress = new SeriesProgress(0, false, series, progressMap, false);
-                userService.addProgress(user, seriesProgress);
-
-                Notification.show("Series added to WatchList: " + selectedWatchList.getName());
-                dialog.close();
-            } else {
-                Notification.show("Please select a WatchList", 3000, Notification.Position.MIDDLE);
+            if (selectedWatchList == null) {
+                ViewNotifications.showErrorNotification("Please select a WatchList");
+                return;
             }
+            if (selectedWatchList.getItems().contains(series)) {
+                ViewNotifications.showErrorNotification("Series already in WatchList: " + selectedWatchList.getName());
+                return;
+            }
+
+            selectedWatchList.getItems().add(series);
+            SeriesProgress seriesProgress = new SeriesProgress(0, false, series, progressMap, false);
+            userService.addProgress(user, seriesProgress);
+
+            ViewNotifications.showSuccessNotification("Series added to WatchList: " + selectedWatchList.getName());
+            dialog.close();
         });
 
         Button cancelButton = new Button("Cancel", e -> dialog.close());

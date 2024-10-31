@@ -22,6 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
+import net.joostvdg.wwi.main.ViewNotifications;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
@@ -226,13 +227,21 @@ public class VideoGameListView extends VerticalLayout {
         // Add button to add video game to selected watchlist
         Button addToWatchlistButton = new Button("Add", event -> {
             WatchList selectedWatchlist = watchlistComboBox.getValue();
-            if (selectedWatchlist != null) {
-                selectedWatchlist.getItems().add(videoGame);
-                Notification.show("Video game added to watchlist: " + selectedWatchlist.getName());
-                dialog.close();
-            } else {
-                Notification.show("Please select a watchlist", 3000, Notification.Position.MIDDLE);
+
+            if (selectedWatchlist == null) {
+                ViewNotifications.showErrorNotification("Please select a watchlist");
+                return;
             }
+
+            if (selectedWatchlist.getItems().contains(videoGame)) {
+                ViewNotifications.showErrorNotification("Video game already in watchlist: " + selectedWatchlist.getName());
+                return;
+            }
+
+            selectedWatchlist.getItems().add(videoGame);
+            ViewNotifications.showSuccessNotification("Video game added to watchlist: " + selectedWatchlist.getName());
+            dialog.close();
+
         });
 
         Button cancelButton = new Button("Cancel", event -> dialog.close());
@@ -272,7 +281,7 @@ public class VideoGameListView extends VerticalLayout {
                 tagsKeyField.clear();
                 tagsValueField.clear();
             } else {
-                Notification.show("Tag key and value must not be empty.", 3000, Notification.Position.MIDDLE);
+                ViewNotifications.showErrorNotification("Tag key and value must not be empty.");
             }
         });
 
@@ -291,7 +300,7 @@ public class VideoGameListView extends VerticalLayout {
 
                 // Create new VideoGame and add it to the WatchList
                 VideoGame newVideoGame = new VideoGame(0, title, platform, genres, publisher, developer, year, optionalTags);
-                videoGameService.addVideoGame(newVideoGame);
+                newVideoGame = videoGameService.addVideoGame(newVideoGame);
 
                 // Create SeriesProgress for this new series
                 Map<String, Integer> progressMap = new HashMap<>();
@@ -305,7 +314,7 @@ public class VideoGameListView extends VerticalLayout {
                 userService.addProgress(user, videoGameProgress);
 
                 updateGrid(newVideoGame);
-                Notification.show("New video game added: " + title);
+                ViewNotifications.showSuccessNotification("New video game added: " + title);
 
                 // Clear the fields
                 titleField.clear();
@@ -320,7 +329,7 @@ public class VideoGameListView extends VerticalLayout {
                 // Close the dialog
                 dialog.close();
             } catch (NumberFormatException e) {
-                Notification.show("Invalid input for ID or Year.", 3000, Notification.Position.MIDDLE);
+                ViewNotifications.showErrorNotification("Invalid input for ID or Year.");
             }
         });
 
