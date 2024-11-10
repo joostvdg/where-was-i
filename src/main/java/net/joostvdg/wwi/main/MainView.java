@@ -35,16 +35,31 @@ public class MainView extends AppLayout {
     public MainView() {
         DrawerToggle toggle = new DrawerToggle();
 
+        String username = "Unknown";
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthenticatedPrincipal principal = (OAuth2AuthenticatedPrincipal) authentication.getPrincipal();
-        String username = principal.getAttribute("name");
-        // TODO: update user login time
-//        String userId = principal.getAttribute("id");
-//        userService.updateUserLoginTime()
 
-        principal.getAuthorities().forEach(authority -> {
-            logger.info("Authority: " + authority.getAuthority());
-        });
+        // Verify how the user is authenticated, could be OAuth2, LDAP, or OIDC (e.g. Keycloak)
+        logger.info("Authentication: {}", authentication.getClass().getName());
+        logger.info("Principal: {}" , authentication.getPrincipal().getClass().getName());
+
+        switch (authentication.getClass().getName()) {
+            case "org.springframework.security.authentication.UsernamePasswordAuthenticationToken":
+                logger.info("Principal is UsernamePasswordAuthenticationToken");
+                username = authentication.getName();
+                break;
+            case "org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken":
+                logger.info("Principal is OAuth2AuthenticationToken");
+                OAuth2AuthenticatedPrincipal principal = (OAuth2AuthenticatedPrincipal) authentication.getPrincipal();
+                username = principal.getAttribute("name");
+                // TODO: update user login time
+                principal.getAuthorities().forEach(authority -> {
+                    logger.info("Authority: {}", authority.getAuthority());
+                });
+                break;
+            default:
+                logger.warn("Principal is unknown");
+        }
+
 
         H1 title = new H1("Where Was I? - " + username);
         title.getStyle().set("font-size", "var(--lumo-font-size-l)")

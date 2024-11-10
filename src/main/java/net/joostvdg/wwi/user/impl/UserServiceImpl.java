@@ -38,8 +38,36 @@ public class UserServiceImpl implements UserService {
     public User getLoggedInUser() {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        OAuth2AuthenticatedPrincipal principal = (OAuth2AuthenticatedPrincipal) authentication.getPrincipal();
-        String username = principal.getAttribute("login");
+        String username = "Unknown";
+        String externalId = "Unknown";
+        String name = "Unknown";
+        String email = "Unknown";
+        String accountType = "Unknown";
+
+        switch (authentication.getClass().getName()) {
+            case "org.springframework.security.authentication.UsernamePasswordAuthenticationToken":
+                logger.info("Principal is UsernamePasswordAuthenticationToken");
+                username = authentication.getName();
+                externalId = username;
+                accountType = "Local";
+                break;
+            case "org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken":
+                logger.info("Principal is OAuth2AuthenticationToken");
+                OAuth2AuthenticatedPrincipal principal = (OAuth2AuthenticatedPrincipal) authentication.getPrincipal();
+                username = principal.getAttribute("name");
+                int idInt = 0;
+                if (principal.getAttribute("id") != null) {
+                    idInt = principal.getAttribute("id");
+                }
+                externalId = String.valueOf(idInt);
+                // if not, create a new user
+                name = principal.getAttribute("name");
+                email = principal.getAttribute("email");
+                accountType = "GitHub"; // TODO: make this dynamic
+                break;
+            default:
+                logger.warn("Principal is unknown");
+        }
 
         for (User user : users) {
             if (user.username().equals(username)) { // TODO: should this be go via ID when we have a database?
@@ -47,16 +75,7 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        int idInt = 0;
-        if (principal.getAttribute("id") != null) {
-            idInt = principal.getAttribute("id");
-        }
-
-        // if not, create a new user
-        String name = principal.getAttribute("name");
-        String email = principal.getAttribute("email");
-
-        User user = new User(userIdCounter.getAndIncrement(), String.valueOf(idInt), "GitHub", username, name, email, LocalDate.now(), LocalDate.now(), new HashSet<>());
+        User user = new User(userIdCounter.getAndIncrement(), externalId, accountType, username, name, email, LocalDate.now(), LocalDate.now(), new HashSet<>());
         users.add(user);
         return user;
     }

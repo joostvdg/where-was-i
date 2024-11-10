@@ -14,6 +14,7 @@ public class HomeView  extends VerticalLayout {
         title.getStyle().set("font-size", "var(--lumo-font-size-l)")
                 .set("margin", "0");
 
+
         add(title);
     }
 }

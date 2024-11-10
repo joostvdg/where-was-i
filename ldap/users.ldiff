@@ -1,0 +1,134 @@
+dn: ou=People, dc=example,dc=org
+objectclass: top
+objectclass: organizationalunit
+ou: People
+
+dn: ou=Groups, dc=example,dc=org
+objectclass: top
+objectclass: organizationalunit
+ou: Groups
+
+dn: cn=Administrators, ou=Groups,dc=example,dc=org
+objectclass: top
+objectclass: groupOfNames
+cn: Administrators
+ou: Groups
+member: uid=admin,ou=People, dc=example,dc=org
+member: uid=jvandergriendt,ou=People, dc=example,dc=org
+
+dn: cn=Blue, ou=Groups,dc=example,dc=org
+objectclass: top
+objectclass: groupOfNames
+cn: Blue
+ou: Groups
+member: uid=blueadmin,ou=People, dc=example,dc=org
+member: uid=bluedev,ou=People, dc=example,dc=org
+
+dn: cn=BlueAdmins, ou=Groups,dc=example,dc=org
+objectclass: top
+objectclass: groupOfNames
+cn: BlueAdmins
+ou: Groups
+member: uid=blueadmin,ou=People, dc=example,dc=org
+
+dn: cn=Green, ou=Groups,dc=example,dc=org
+objectclass: top
+objectclass: groupOfNames
+cn: Green
+ou: Groups
+member: uid=greenadmin,ou=People, dc=example,dc=org
+member: uid=greendev,ou=People, dc=example,dc=org
+
+dn: cn=GreenAdmins, ou=Groups,dc=example,dc=org
+objectclass: top
+objectclass: groupOfNames
+cn: GreenAdmins
+ou: Groups
+member: uid=greenadmin,ou=People, dc=example,dc=org
+
+dn: cn=Developers, ou=Groups,dc=example,dc=org
+objectclass: top
+objectclass: groupOfNames
+cn: Developers
+ou: Groups
+member: uid=bluedev,ou=People, dc=example,dc=org
+member: uid=greendev,ou=People, dc=example,dc=org
+
+dn: uid=joostvdg, ou=People, dc=example,dc=org
+uid: joostvdg
+cn: Joost
+sn: joostvdg
+givenname: Joost van der Griendt
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+ou: People
+mail: joostvdg@gmail.com
+userpassword: wachtwoord
+
+dn: uid=blueadmin, ou=People, dc=example,dc=org
+uid: blueadmin
+cn: blueadmin
+sn: blueadmin
+givenname: Blue Admin
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+ou: People
+mail: blueadmin@example.org
+userPassword: wachtwoord
+
+dn: uid=bluedev, ou=People, dc=example,dc=org
+uid: bluedev
+cn: bluedev
+sn: bluedev
+givenname: Blue Dev
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+ou: People
+mail: bluedev@example.org
+userPassword: wachtwoord
+
+# add specific people (users)
+dn: uid=greenadmin, ou=People, dc=example,dc=org
+uid: greenadmin
+cn: greenadmin
+sn: greenadmin
+givenname: Green Admin
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+ou: People
+mail: greenadmin@example.org
+userPassword: wachtwoord
+
+dn: uid=greendev, ou=People, dc=example,dc=org
+uid: greendev
+cn: greendev
+sn: greendev
+givenname: Green Dev
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+ou: People
+mail: greendev@example.org
+userPassword: wachtwoord
+
+dn: uid=admin, ou=People, dc=example,dc=org
+cn: admin
+sn: admin
+givenname: admin
+objectclass: top
+objectclass: person
+objectclass: organizationalPerson
+objectclass: inetOrgPerson
+ou: People
+uid: admin
+mail: admin@example.org
+userPassword: wachtwoord
