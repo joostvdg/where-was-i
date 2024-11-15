@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.ldap.userdetails.InetOrgPerson;
+import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.stereotype.Service;
 
@@ -44,12 +46,21 @@ public class UserServiceImpl implements UserService {
         String email = "Unknown";
         String accountType = "Unknown";
 
+        logger.info("Authentication: {}", authentication.getClass().getName());
         switch (authentication.getClass().getName()) {
             case "org.springframework.security.authentication.UsernamePasswordAuthenticationToken":
                 logger.info("Principal is UsernamePasswordAuthenticationToken");
                 username = authentication.getName();
                 externalId = username;
                 accountType = "Local";
+                logger.info("Principal: {}" , authentication.getPrincipal().getClass().getName());
+                if (authentication.getPrincipal() instanceof InetOrgPerson person) {
+                    logger.info("InetOrgPerson: {}", person);
+                    name = person.getGivenName();
+                    email = person.getMail();
+                    accountType = "LDAP";
+                }
+
                 break;
             case "org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken":
                 logger.info("Principal is OAuth2AuthenticationToken");
