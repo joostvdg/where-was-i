@@ -1,9 +1,10 @@
 package net.joostvdg.wwi.user;
 
 import net.joostvdg.wwi.media.Progress;
-import net.joostvdg.wwi.media.SeriesProgress;
-import net.joostvdg.wwi.media.VideoGameProgress;
 import org.springframework.stereotype.Component;
+
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public interface UserService {
@@ -12,4 +13,10 @@ public interface UserService {
     void updateProgress(User user, Progress progress);
 
     void addProgress(User user, Progress progress);
+
+    List<User> getAllUsers();
+
+    boolean userExists(User selectedUser);
+
+    Optional<User> getUserForUsername(String username);
 }

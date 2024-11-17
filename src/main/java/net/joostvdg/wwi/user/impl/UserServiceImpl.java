@@ -1,6 +1,7 @@
 package net.joostvdg.wwi.user.impl;
 
 import net.joostvdg.wwi.media.*;
+import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.user.UserService;
 import org.slf4j.Logger;
@@ -13,9 +14,7 @@ import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -158,6 +157,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    @Override
+    public List<User> getAllUsers() {
+        return Collections.unmodifiableList(List.copyOf(users));
+    }
+
     private boolean containsProgress(User user, Progress newProgress) {
         for (Progress progress : user.progress()) {
             if (progress.getId() == newProgress.getId() || progress.getMedia().getId() == newProgress.getMedia().getId()) {
@@ -167,14 +171,26 @@ public class UserServiceImpl implements UserService {
         return false;
     }
 
-    private boolean userExists(User user) {
+    @Override
+    public boolean userExists(User user) {
         // TODO: validate on User ID
         // for now, we limit the check to username, which should be unique as well
         var foundUser = users.stream().filter(u -> u.username().equals(user.username())).findFirst().orElseThrow(() -> new IllegalArgumentException("User does not exist"));
         return foundUser != null;
     }
 
+    @Override
+    public Optional<User> getUserForUsername(String username) {
+        for (User user : users) {
+            if (user.username().equals(username)) {
+                return Optional.of(user);
+            }
+        }
+        return Optional.empty();
+    }
+
     private User cloneUserWithUpdatedProgress(User user, Set<Progress> progresses) {
         return new User(user.id(), user.accountNumber(), user.accountType(), user.username(), user.name(), user.email(), user.dateJoined(), user.dateLastLogin(), progresses);
     }
+
 }

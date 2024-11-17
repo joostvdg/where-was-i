@@ -398,7 +398,6 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         logger.info("Progresses: " + progresses);
         dataProvider = new ListDataProvider<>(progresses);
         progressGrid.setDataProvider(dataProvider);
-//        progressGrid.setItems(progresses);
     }
 
 

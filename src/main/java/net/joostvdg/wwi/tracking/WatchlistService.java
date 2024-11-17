@@ -17,4 +17,8 @@ public interface WatchlistService {
     Set<Progress> getProgressForWatchlist(WatchList watchList);
 
     List<WatchList> getWatchListsForUser(User user);
+
+    List<WatchList> findSharedWith(User loggedInUser);
+
+    void shareWatchlist(WatchList watchlist, User selectedUser);
 }

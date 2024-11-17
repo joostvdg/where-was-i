@@ -61,4 +61,12 @@ public record SeriesProgress(
     public int hashCode() {
         return Long.hashCode(id);
     }
+
+    @Override
+    public String getSummary() {
+        // traverse the progress map and create a summary
+        StringBuilder summary = new StringBuilder();
+        progress.forEach((key, value) -> summary.append(key).append(": ").append(value).append(", "));
+        return summary.toString();
+    }
 }

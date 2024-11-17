@@ -8,4 +8,6 @@ public sealed interface Progress permits MovieProgress, SeriesProgress, VideoGam
     boolean isFinished();// Progress tracked as a map (e.g., for series: "Season 1" -> 5/10 episodes)
     boolean isFavorite(); // Indicator if this is marked as a favorite
     Media getMedia(); // Method to retrieve the media being tracked (Series, Movie, VideoGame, etc.)
+
+    String getSummary(); // Method to generate a summary of the progress
 }

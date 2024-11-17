@@ -62,7 +62,7 @@ public class WatchlistServiceImpl implements WatchlistService {
     @Override
     public Set<Progress> getProgressForWatchlist(WatchList watchList) {
         // retrieve the user from the UserService
-        var user = userService.getLoggedInUser();
+        var user = userService.getUserForUsername(watchList.getOwner().username()).orElseThrow(() -> new IllegalArgumentException("User does not exist"));
 
         // retrieve the progress from the user
         var progresses = user.progress();
@@ -80,4 +80,39 @@ public class WatchlistServiceImpl implements WatchlistService {
                 .filter(watchList -> watchList.getOwner().username().equals(user.username()))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<WatchList> findSharedWith(User user) {
+        return watchLists.stream()
+                .filter(watchList -> watchList.getReadShared().contains(user) || watchList.getWriteShared().contains(user))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public void shareWatchlist(WatchList watchlist, User selectedUser) {
+        var loggedInUser = userService.getLoggedInUser();
+        if (loggedInUser.username().equals(selectedUser.username())) {
+            throw new IllegalArgumentException("Cannot share with yourself");
+        }
+
+        if (!watchlist.getOwner().username().equals(loggedInUser.username())) {
+            throw new IllegalArgumentException("Cannot share a watchlist you do not own");
+        }
+
+        // verify the watchlist exists
+        watchLists.stream()
+                .filter(watchList -> watchList.getId() == watchlist.getId())
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Watchlist does not exist"));
+
+        // verify the user exists
+        if (!userService.userExists(selectedUser)) {
+            throw new IllegalArgumentException("User does not exist");
+        }
+
+        // add the user to the readShared list
+        watchlist.getReadShared().add(selectedUser);
+    }
+
+
 }
