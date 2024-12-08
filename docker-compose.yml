@@ -34,3 +34,26 @@ services:
     restart: unless-stopped
     depends_on:
       - openldap
+
+  postgres:
+    image: 'postgres:15.7'
+    volumes:
+      - type: tmpfs
+        target: /dev/shm
+        tmpfs:
+          size: 134217728 # 128*2^20 bytes = 128Mb
+#    environment:
+#      - 'POSTGRES_DB=wherewasi'
+#      - 'POSTGRES_PASSWORD=wherewasi'
+#      - 'POSTGRES_USER=wherewasi'
+    environment:
+      POSTGRES_USER: wherewasi
+      POSTGRES_DB: wherewasi
+      POSTGRES_PASSWORD: wherewasi
+    ports:
+      - '6543:5432'
+  adminer:
+    image: adminer
+    restart: always
+    ports:
+      - 8082:8080

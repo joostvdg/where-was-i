@@ -1,19 +1,28 @@
 package net.joostvdg.wwi.media.impl;
 
+import com.alibaba.fastjson.JSON;
 import net.joostvdg.wwi.media.Series;
 import net.joostvdg.wwi.media.SeriesService;
+import net.joostvdg.wwi.model.Tables;
+import net.joostvdg.wwi.model.tables.records.SeriesRecord;
+import org.jooq.DSLContext;
+import org.jooq.JSONB;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 public class SeriesServiceImpl implements SeriesService {
-    private final Set<Series> series;
-    private final AtomicInteger idCounter = new AtomicInteger(1);
 
-    public SeriesServiceImpl() {
-        this.series = new HashSet<>();
+    private final Logger logger = LoggerFactory.getLogger(SeriesServiceImpl.class);
+    private final DSLContext create;
+
+    public SeriesServiceImpl(DSLContext create) {
+        this.create = create;
     }
 
     @Override
@@ -27,16 +36,96 @@ public class SeriesServiceImpl implements SeriesService {
             throw new IllegalArgumentException("Series title cannot be null or empty");
         }
 
-        if (series.contains(tvSeries)) {
-            throw new IllegalArgumentException("Series already exists");
+        Series foundSeries = findSeriesById((int) tvSeries.id());
+        if (foundSeries != null) {
+            throw new IllegalArgumentException("Series with id " + tvSeries.id() + " already exists");
         }
-        Series newSeries = new Series(idCounter.getAndIncrement(), tvSeries.title(), tvSeries.genre(), tvSeries.seasons(), tvSeries.platform(), tvSeries.url(), tvSeries.releaseYear(), tvSeries.endYear(), tvSeries.tags());
-        series.add(newSeries);
+
+        String tagsJson = "{}";
+        if (tvSeries.tags().isPresent()) {
+            tagsJson = JSON.toJSONString(tvSeries.tags().get());
+        }
+
+        SeriesRecord newSeriesRecord = create.insertInto(Tables.SERIES)
+            .set(Tables.SERIES.TITLE, tvSeries.title())
+            .set(Tables.SERIES.GENRE, tvSeries.genre().toArray(new String[0]))
+            .set(Tables.SERIES.SEASONS, JSONB.valueOf(JSON.toJSONString(tvSeries.seasons())))
+            .set(Tables.SERIES.PLATFORM, tvSeries.platform())
+            .set(Tables.SERIES.URL, tvSeries.url().orElse(null))
+            .set(Tables.SERIES.RELEASE_YEAR, tvSeries.releaseYear().map(LocalDate::getYear).orElse(null))
+            .set(Tables.SERIES.END_YEAR, tvSeries.endYear().map(LocalDate::getYear).orElse(null))
+            .set(Tables.SERIES.TAGS, JSONB.valueOf(tagsJson))
+            .returning(Tables.SERIES.ID)
+            .fetchOne();
+
+        if (newSeriesRecord == null) {
+            throw new IllegalStateException("Series could not be created");
+        }
+
+        var id = newSeriesRecord.getId();
+        Series newSeries = findSeriesById(id);
+        if (newSeries == null) {
+            throw new IllegalStateException("Series could not be created (verification failed)");
+        }
+
         return newSeries;
+    }
+
+    private Series findSeriesById(int id) {
+        SeriesRecord foundRecord = create.selectFrom(Tables.SERIES).where(Tables.SERIES.ID.eq(id)).fetchOne();
+        if (foundRecord == null) {
+            return null;
+        }
+        return translateRecordToSeries(foundRecord);
     }
 
     @Override
     public List<Series> findAll() {
-        return new ArrayList<>(series);
+        List<SeriesRecord> seriesRecords = create.selectFrom(Tables.SERIES).fetch();
+        List<Series> seriesList = new ArrayList<>();
+        for (SeriesRecord seriesRecord : seriesRecords) {
+            Series series = translateRecordToSeries(seriesRecord);
+            seriesList.add(series);
+        }
+        return seriesList;
+    }
+
+    private Series translateRecordToSeries(SeriesRecord seriesRecord) {
+        Set<String> genre = Arrays.stream(seriesRecord.getGenre()).collect(Collectors.toSet());
+        Map<String, Integer> seasons = new HashMap<>();
+        String jsonData = seriesRecord.getSeasons().data();
+        // TODO: check if this is correct
+        if (!jsonData.isBlank()) {
+            seasons = JSON.parseObject(jsonData, Map.class);
+        }
+
+        Optional<String> optionalUrl = Optional.empty();
+        if (seriesRecord.getUrl() != null && !seriesRecord.getUrl().isBlank()) {
+            optionalUrl = Optional.of(seriesRecord.getUrl());
+        }
+
+        Optional<LocalDate> releaseYear = Optional.empty();
+        if (seriesRecord.getReleaseYear() != null) {
+            LocalDate releaseDate = LocalDate.of(seriesRecord.getReleaseYear(), 1, 2);
+            releaseYear = Optional.of(releaseDate);
+        }
+
+        Optional<LocalDate> endYear = Optional.empty();
+        if (seriesRecord.getEndYear() != null) {
+            LocalDate endDate = LocalDate.of(seriesRecord.getEndYear(), 1, 2);
+            endYear = Optional.of(endDate);
+        }
+
+        return new Series(
+                seriesRecord.getId(),
+                seriesRecord.getTitle(),
+                genre,
+                seasons,
+                seriesRecord.getPlatform(),
+                optionalUrl,
+                releaseYear,
+                endYear,
+                MediaHelper.translateTags(seriesRecord.getTags())
+        );
     }
 }

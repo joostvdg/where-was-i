@@ -2,10 +2,14 @@ package net.joostvdg.wwi.media;
 
 import com.vaadin.flow.component.button.Button;
 import com.vaadin.flow.component.combobox.ComboBox;
+import com.vaadin.flow.component.details.Details;
 import com.vaadin.flow.component.dialog.Dialog;
 import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
+import com.vaadin.flow.component.html.Div;
+import com.vaadin.flow.component.html.ListItem;
 import com.vaadin.flow.component.html.Span;
+import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
 import com.vaadin.flow.component.notification.Notification;
@@ -130,7 +134,13 @@ public class MovieListView extends VerticalLayout {
         formLayout.addFormItem(new TextField("Release Year", String.valueOf(movie.releaseYear())), "Release Year");
         formLayout.addFormItem(new TextField("Genres", String.join(", ", movie.genre())), "Genres");
         formLayout.addFormItem(new TextField("URL", movie.url().orElse("")), "URL");
-        formLayout.addFormItem(new TextField("Tags", movie.tags().map(tags -> tags.toString()).orElse("No tags")), "Tags");
+
+        UnorderedList tagsList = new UnorderedList();
+        for (Map.Entry<String, String> entry : movie.tags().get().entrySet()) {
+            tagsList.add(new ListItem(entry.getKey() + ": " + entry.getValue()));
+        }
+        Details tagDetails = new Details("Tags", tagsList);
+        tagDetails.setOpened(true);
 
         // All fields should be read-only
         formLayout.getChildren().filter( child -> child instanceof TextField)
@@ -138,7 +148,7 @@ public class MovieListView extends VerticalLayout {
                 .forEach(field -> field.setReadOnly(true));
 
         Button closeButton = new Button("Close", e -> dialog.close());
-        dialog.add(formLayout, closeButton);
+        dialog.add(formLayout, tagDetails, closeButton);
         dialog.open();
     }
 
@@ -147,19 +157,63 @@ public class MovieListView extends VerticalLayout {
         FormLayout formLayout = new FormLayout();
 
         // Fields for Movie editing
-        TextField titleField = new TextField("Title", movie.title());
-        TextField platformField = new TextField("Platform", movie.platform());
-        TextField directorField = new TextField("Director", movie.director());
-        TextField durationField = new TextField("Duration (in minutes)", String.valueOf(movie.durationInMinutes()));
-        TextField releaseYearField = new TextField("Release Year", String.valueOf(movie.releaseYear()));
-        TextField genreField = new TextField("Genres (comma-separated)", String.join(", ", movie.genre()));
-        TextField urlField = new TextField("URL (optional)", movie.url().orElse(""));
+        TextField titleField = new TextField("Title");
+        titleField.setValue(movie.title());
+        TextField platformField = new TextField("Platform");
+        platformField.setValue(movie.platform());
+        TextField directorField = new TextField("Director");
+        directorField.setValue(movie.director());
+        TextField durationField = new TextField("Duration (in minutes)");
+        durationField.setValue(String.valueOf(movie.durationInMinutes()));
+        TextField releaseYearField = new TextField("Release Year");
+        releaseYearField.setValue(String.valueOf(movie.releaseYear()));
+        TextField genreField = new TextField("Genres (comma-separated)");
+        genreField.setValue(String.join(", ", movie.genre()));
+        TextField urlField = new TextField("URL (optional)");
+        urlField.setValue(movie.url().orElse(""));
+
+        TextField tagsKeyField = new TextField("Tag Key");
+        TextField tagsValueField = new TextField("Tag Value");
+        Div tagContainer = new Div();  // Container for displaying added tags
+        Map<String, String> tags = new HashMap<>();
+
+        Button addTagButton = new Button("Add Tag", event -> {
+            String key = tagsKeyField.getValue();
+            String value = tagsValueField.getValue();
+
+            if (!key.isEmpty() && !value.isEmpty()) {
+                tags.put(key, value);
+                ViewNotifications.showSuccessNotification("Tag added: " + key + " = " + value);
+                tagContainer.add(new Span(key + ": " + value));  // Display the added tag
+                tagsKeyField.clear();
+                tagsValueField.clear();
+            } else {
+                ViewNotifications.showErrorNotification("Tag key and value must not be empty.");
+            }
+        });
 
         // Save button to handle the Movie edit
         Button saveButton = new Button("Save", event -> {
             try {
                 // Update movie object with edited values
-                movieGrid.getDataProvider().refreshItem(movie);
+                // also add the existing tags to the new tags
+                tags.putAll(movie.tags().get());
+                Set<String> genres = new HashSet<>(Arrays.asList(genreField.getValue().split(",\\s*")));
+                var movieId = movie.getId();
+                // create new movie object with the new values
+                Movie movieToUpdate = new Movie(
+                        movieId,
+                        titleField.getValue(),
+                        platformField.getValue(),
+                        directorField.getValue(),
+                        Integer.parseInt(durationField.getValue()),
+                        Integer.parseInt(releaseYearField.getValue()),
+                        genres,
+                        Optional.of(urlField.getValue()),
+                        Optional.of(tags)
+                    );
+                movieService.update(movieToUpdate);
+                movieGrid.getDataProvider().refreshItem(movieToUpdate);
                 Notification.show("Movie updated: " + titleField.getValue());
                 dialog.close();
             } catch (NumberFormatException e) {
@@ -169,9 +223,16 @@ public class MovieListView extends VerticalLayout {
 
         Button cancelButton = new Button("Cancel", event -> dialog.close());
 
+        UnorderedList tagsList = new UnorderedList();
+        for (Map.Entry<String, String> entry : movie.tags().get().entrySet()) {
+            tagsList.add(new ListItem(entry.getKey() + ": " + entry.getValue()));
+        }
+        Details tagDetails = new Details("Tags", tagsList);
+        tagDetails.setOpened(true);
+
         // Add components to the form layout
         formLayout.add(titleField, platformField, directorField, durationField, releaseYearField, genreField, urlField);
-        dialog.add(formLayout, new HorizontalLayout(saveButton, cancelButton));
+        dialog.add(formLayout, tagsKeyField, tagsValueField, addTagButton, tagContainer, tagDetails, new HorizontalLayout(saveButton, cancelButton));
         dialog.open();
     }
 
@@ -276,6 +337,26 @@ public class MovieListView extends VerticalLayout {
         TextField genreField = new TextField("Genres (comma-separated)");
         TextField urlField = new TextField("URL (optional)");
 
+        TextField tagsKeyField = new TextField("Tag Key");
+        TextField tagsValueField = new TextField("Tag Value");
+        Div tagContainer = new Div();  // Container for displaying added tags
+        Map<String, String> tags = new HashMap<>();
+
+        Button addTagButton = new Button("Add Tag", event -> {
+            String key = tagsKeyField.getValue();
+            String value = tagsValueField.getValue();
+
+            if (!key.isEmpty() && !value.isEmpty()) {
+                tags.put(key, value);
+                ViewNotifications.showSuccessNotification("Tag added: " + key + " = " + value);
+                tagContainer.add(new Span(key + ": " + value));  // Display the added tag
+                tagsKeyField.clear();
+                tagsValueField.clear();
+            } else {
+                ViewNotifications.showErrorNotification("Tag key and value must not be empty.");
+            }
+        });
+
         // Save button
         Button saveButton = new Button("Save", event -> {
             try {
@@ -287,9 +368,10 @@ public class MovieListView extends VerticalLayout {
                 int releaseYear = Integer.parseInt(releaseYearField.getValue());
                 Set<String> genres = new HashSet<>(Arrays.asList(genreField.getValue().split(",\\s*")));
                 Optional<String> url = urlField.isEmpty() ? Optional.empty() : Optional.of(urlField.getValue());
+                Optional<Map<String, String>> tagsOptional = tags.isEmpty() ? Optional.empty() : Optional.of(tags);
 
                 // Create new Movie object
-                Movie newMovie = new Movie(0L,title, platform, director, duration, releaseYear, genres, url, Optional.empty());
+                Movie newMovie = new Movie(0L,title, platform, director, duration, releaseYear, genres, url, tagsOptional);
 
                 // Save movie using service and update grid
                 newMovie = movieService.save(newMovie);
@@ -306,7 +388,7 @@ public class MovieListView extends VerticalLayout {
 
         // Add components to the form
         formLayout.add(titleField, platformField, directorField, durationField, releaseYearField, genreField, urlField);
-        dialog.add(formLayout, new HorizontalLayout(saveButton, cancelButton));
+        dialog.add(formLayout, tagsKeyField, tagsValueField, addTagButton, tagContainer, new HorizontalLayout(saveButton, cancelButton));
 
         dialog.open();
     }

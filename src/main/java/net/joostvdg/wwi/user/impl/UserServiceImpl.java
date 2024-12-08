@@ -1,22 +1,26 @@
 package net.joostvdg.wwi.user.impl;
 
 import net.joostvdg.wwi.media.*;
-import net.joostvdg.wwi.tracking.WatchList;
+import net.joostvdg.wwi.model.Tables;
+import net.joostvdg.wwi.model.tables.records.UsersRecord;
 import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.user.UserService;
+import org.jooq.DSLContext;
+import org.jooq.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.ldap.userdetails.InetOrgPerson;
-import org.springframework.security.ldap.userdetails.LdapUserDetailsImpl;
 import org.springframework.security.oauth2.core.OAuth2AuthenticatedPrincipal;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@Transactional
 @Service
 public class UserServiceImpl implements UserService {
 
@@ -25,11 +29,12 @@ public class UserServiceImpl implements UserService {
     private final Object lock = new Object();
 
     private final AtomicInteger progressIdCounter = new AtomicInteger(1);
-    private final AtomicInteger userIdCounter = new AtomicInteger(1);
+    private final DSLContext create;
 
     private final Logger logger = LoggerFactory.getLogger(UserServiceImpl.class);
 
-    public UserServiceImpl() {
+    public UserServiceImpl(DSLContext create) {
+        this.create = create;
         this.users = new HashSet<>();
     }
 
@@ -73,21 +78,54 @@ public class UserServiceImpl implements UserService {
                 // if not, create a new user
                 name = principal.getAttribute("name");
                 email = principal.getAttribute("email");
-                accountType = "GitHub"; // TODO: make this dynamic
+                accountType = "GitHub";
                 break;
             default:
                 logger.warn("Principal is unknown");
         }
 
-        for (User user : users) {
-            if (user.username().equals(username)) { // TODO: should this be go via ID when we have a database?
-                return user;
-            }
-        }
+        return findOrCreateUser(username, externalId, accountType, name, email);
+    }
 
-        User user = new User(userIdCounter.getAndIncrement(), externalId, accountType, username, name, email, LocalDate.now(), LocalDate.now(), new HashSet<>());
-        users.add(user);
-        return user;
+    private User findOrCreateUser(String username, String externalId, String accountType, String name, String email) {
+        // Find users by username through the database
+        Result<UsersRecord> result = create.selectFrom(Tables.USERS)
+                .where(Tables.USERS.USERNAME.eq(username))
+                .fetch();
+        if (result.isEmpty()) {
+            // Create a new user
+            logger.info("Creating new user: {}", username);
+            var now = LocalDateTime.now();
+            create.insertInto(Tables.USERS)
+                    .set(Tables.USERS.ACCOUNT_NUMBER, externalId)
+                    .set(Tables.USERS.ACCOUNT_TYPE, accountType)
+                    .set(Tables.USERS.USERNAME, username)
+                    .set(Tables.USERS.NAME, name)
+                    .set(Tables.USERS.EMAIL, email)
+                    .set(Tables.USERS.DATE_JOINED, now)
+                    .set(Tables.USERS.DATE_LAST_LOGIN, now)
+                    .execute();
+
+            // TODO: can we do this in one go?
+            UsersRecord newUserRecord = create.selectFrom(Tables.USERS)
+                    .where(Tables.USERS.USERNAME.eq(username))
+                    .fetchOne();
+            if (newUserRecord == null) {
+                throw new IllegalStateException("User not found after creation");
+            }
+            return translateRecordToUser(newUserRecord);
+        } else {
+            logger.info("Found user: {}", result.getFirst());
+            UsersRecord existingUser = result.getFirst();
+            var now = LocalDateTime.now();
+            // update last login
+            create.update(Tables.USERS)
+                    .set(Tables.USERS.DATE_LAST_LOGIN, now)
+                    .where(Tables.USERS.ID.eq(existingUser.getId()))
+                    .execute();
+            existingUser.setDateLastLogin(now);
+            return translateRecordToUser(existingUser);
+        }
     }
 
 
@@ -159,7 +197,27 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<User> getAllUsers() {
-        return Collections.unmodifiableList(List.copyOf(users));
+        Result<UsersRecord> result = create.selectFrom(Tables.USERS).fetch();
+        List<User> users = new ArrayList<>();
+        for (UsersRecord record : result) {
+            User user = translateRecordToUser(record);
+            users.add(user);
+        }
+        return users;
+    }
+
+    private User translateRecordToUser(UsersRecord record) {
+        return new User(
+                record.getId(),
+                record.getAccountNumber(),
+                record.getAccountType(),
+                record.getUsername(),
+                record.getName(),
+                record.getEmail(),
+                record.getDateJoined().toLocalDate(),
+                record.getDateLastLogin() != null ? record.getDateLastLogin().toLocalDate() : null,
+                new HashSet<>() // Assuming progress will be handled separately
+        );
     }
 
     private boolean containsProgress(User user, Progress newProgress) {
