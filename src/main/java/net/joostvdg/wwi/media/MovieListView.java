@@ -371,7 +371,7 @@ public class MovieListView extends VerticalLayout {
                 Optional<Map<String, String>> tagsOptional = tags.isEmpty() ? Optional.empty() : Optional.of(tags);
 
                 // Create new Movie object
-                Movie newMovie = new Movie(0L,title, platform, director, duration, releaseYear, genres, url, tagsOptional);
+                Movie newMovie = new Movie(0,title, platform, director, duration, releaseYear, genres, url, tagsOptional);
 
                 // Save movie using service and update grid
                 newMovie = movieService.save(newMovie);

@@ -23,6 +23,7 @@ import com.vaadin.flow.router.HasUrlParameter;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
+import net.joostvdg.wwi.main.Labels;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.main.ViewNotifications;
 import net.joostvdg.wwi.media.*;
@@ -40,14 +41,7 @@ import java.util.stream.Collectors;
 @PermitAll
 public class WatchListDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
-    public static final String FINISHED = "Finished";
-    public static final String FAVORITE = "Favorite";
-    public static final String NOT_FAVORITE = "Not Favorite";
-    public static final String ALL = "All";
-    public static final String NOT_FINISHED = "Not Finished";
-    public static final String TITLE = "Title";
-    public static final String PLATFORM = "Platform";
-    public static final String PROGRESS = "Progress";
+
     private final WatchlistService watchlistService;
 
     private final SeriesService seriesService;
@@ -114,7 +108,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         ownerField.setValue(watchList.getOwner().username());
         ownerField.setReadOnly(true);
 
-        TextField favoriteField = new TextField(FAVORITE);
+        TextField favoriteField = new TextField(Labels.FAVORITE);
         favoriteField.setValue(watchList.isFavorite() ? "Yes" : "No");
         favoriteField.setReadOnly(true);
 
@@ -169,38 +163,38 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         })).setHeader("Actions").setAutoWidth(true);
 
         progressGrid.addColumn(progress -> progress.getMedia().getTitle())
-                .setHeader(TITLE)
+                .setHeader(Labels.TITLE)
                 .setSortable(true)
                 .setAutoWidth(true);
 
         progressGrid.addColumn(progress -> progress.getMedia().getPlatform())
-                .setHeader(PLATFORM)
+                .setHeader(Labels.PLATFORM)
                 .setSortable(true)
                 .setAutoWidth(true);
 
         // Add columns for the Progress part
         progressGrid.addColumn(progress -> progress.getProgress().toString())  // Display progress details (e.g., episodes watched)
-                .setHeader(PROGRESS)
+                .setHeader(Labels.PROGRESS)
                 .setAutoWidth(true);
 
         progressGrid.addColumn(progress -> progress.isFinished() ? "Yes" : "No")
-                .setHeader(FINISHED)
+                .setHeader(Labels.FINISHED)
                 .setSortable(true)
                 .setAutoWidth(true);
 
         progressGrid.addColumn(progress -> progress.isFavorite() ? "Yes" : "No")
-                .setHeader(FAVORITE)
+                .setHeader(Labels.FAVORITE)
                 .setSortable(true)
                 .setAutoWidth(true);
 
         // Create the filter panel
-        ComboBox<String> isFavoriteFilter = new ComboBox<>(FAVORITE);
-        isFavoriteFilter.setItems(ALL, FAVORITE, NOT_FAVORITE);
-        isFavoriteFilter.setValue(ALL);
+        ComboBox<String> isFavoriteFilter = new ComboBox<>(Labels.FAVORITE);
+        isFavoriteFilter.setItems(Labels.ALL, Labels.FAVORITE, Labels.NOT_FAVORITE);
+        isFavoriteFilter.setValue(Labels.ALL);
 
-        ComboBox<String> isFinishedFilter = new ComboBox<>(FINISHED);
-        isFinishedFilter.setItems(ALL, FINISHED, NOT_FINISHED);
-        isFinishedFilter.setValue(ALL);
+        ComboBox<String> isFinishedFilter = new ComboBox<>(Labels.FINISHED);
+        isFinishedFilter.setItems(Labels.ALL, Labels.FINISHED, Labels.NOT_FINISHED);
+        isFinishedFilter.setValue(Labels.ALL);
 
         // Add listeners for the filters
         isFavoriteFilter.addValueChangeListener(event -> applyFilters(isFavoriteFilter, isFinishedFilter));
@@ -223,13 +217,13 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         String favoriteValue = isFavoriteFilter.getValue();
         if (favoriteValue != null) {
             switch (favoriteValue) {
-                case FAVORITE:
+                case Labels.FAVORITE:
                     dataProvider.addFilter(Progress::isFavorite);
                     break;
-                case NOT_FAVORITE:
+                case Labels.NOT_FAVORITE:
                     dataProvider.addFilter(media -> !media.isFavorite());
                     break;
-                case ALL:
+                case Labels.ALL:
                 default:
                     // No filter is applied for "All"
                     break;
@@ -239,13 +233,13 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         String finishedValue = isFinishedFilter.getValue();
         if (finishedValue != null) {
             switch (finishedValue) {
-                case FINISHED:
+                case Labels.FINISHED:
                     dataProvider.addFilter(Progress::isFinished);
                     break;
-                case NOT_FINISHED:
+                case Labels.NOT_FINISHED:
                     dataProvider.addFilter(media -> !media.isFinished());
                     break;
-                case ALL:
+                case Labels.ALL:
                 default:
                     // No filter is applied for "All"
                     break;
@@ -259,15 +253,15 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         FormLayout formLayout = new FormLayout();
 
         // Media details
-        formLayout.addFormItem(new Span(progress.getMedia().getTitle()), TITLE);
-        formLayout.addFormItem(new Span(progress.getMedia().getPlatform()), PLATFORM);
+        formLayout.addFormItem(new Span(progress.getMedia().getTitle()), Labels.TITLE);
+        formLayout.addFormItem(new Span(progress.getMedia().getPlatform()), Labels.PLATFORM);
         if (progress.getMedia() instanceof Movie movie) {
             formLayout.addFormItem(new Span(String.valueOf(movie.durationInMinutes())), "Duration (in minutes)");
         }
 
         // Progress details
-        formLayout.addFormItem(new Span(progress.isFavorite() ? "Yes" : "No"), FAVORITE);
-        formLayout.addFormItem(new Span(progress.isFinished() ? "Yes" : "No"), FINISHED);
+        formLayout.addFormItem(new Span(progress.isFavorite() ? "Yes" : "No"), Labels.FAVORITE);
+        formLayout.addFormItem(new Span(progress.isFinished() ? "Yes" : "No"), Labels.FINISHED);
 
         // for each entry, create a ListItem with the key and value
         UnorderedList progressList = new UnorderedList();
@@ -293,11 +287,11 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
         // add checkboxes for favorite and finished
         // Checkbox for isFavorite
-        Checkbox favoriteCheckbox = new Checkbox(FAVORITE);
+        Checkbox favoriteCheckbox = new Checkbox(Labels.FAVORITE);
         favoriteCheckbox.setValue(progress.isFavorite());
 
         // Checkbox for isFinished (assuming the Progress interface has an isFinished method)
-        Checkbox finishedCheckbox = new Checkbox(FINISHED);
+        Checkbox finishedCheckbox = new Checkbox(Labels.FINISHED);
         finishedCheckbox.setValue(progress.isFinished());
 
         formLayout.addFormItem(favoriteCheckbox, "Is Favorite");
@@ -493,8 +487,8 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         FormLayout formLayout = new FormLayout();
 
         // Fields for Series creation
-        TextField titleField = new TextField(TITLE);
-        TextField platformField = new TextField(PLATFORM);
+        TextField titleField = new TextField(Labels.TITLE);
+        TextField platformField = new TextField(Labels.PLATFORM);
         TextField genreField = new TextField("Genres (comma-separated)");  // Comma-separated genres
         TextField urlField = new TextField("URL (optional)");  // Optional URL
         TextField releaseYearField = new TextField("Release Year");  // Release year
@@ -618,14 +612,14 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         FormLayout formLayout = new FormLayout();
 
         // Fields for VideoGame creation
-        TextField titleField = new TextField(TITLE);
-        TextField platformField = new TextField(PLATFORM);
-        TextField genreField = new TextField("Genres (comma-separated)");
-        TextField publisherField = new TextField("Publisher");
-        TextField developerField = new TextField("Developer");
-        TextField yearField = new TextField("Release Year");
-        TextField tagsKeyField = new TextField("Tag Key");
-        TextField tagsValueField = new TextField("Tag Value");
+        TextField titleField = new TextField(Labels.TITLE);
+        TextField platformField = new TextField(Labels.PLATFORM);
+        TextField genreField = new TextField(Labels.GENRES_INPUT);
+        TextField publisherField = new TextField(Labels.PUBLISHER);
+        TextField developerField = new TextField(Labels.DEVELOPER);
+        TextField yearField = new TextField(Labels.RELEASE_YEAR);
+        TextField tagsKeyField = new TextField(Labels.TAG_KEY);
+        TextField tagsValueField = new TextField(Labels.TAG_VALUE);
 
         // Container for tags
         Div tagContainer = new Div();

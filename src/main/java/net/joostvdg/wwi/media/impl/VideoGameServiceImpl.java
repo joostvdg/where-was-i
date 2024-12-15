@@ -1,48 +1,131 @@
 package net.joostvdg.wwi.media.impl;
 
+import com.alibaba.fastjson.JSON;
 import net.joostvdg.wwi.media.VideoGame;
 import net.joostvdg.wwi.media.VideoGameService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import net.joostvdg.wwi.model.Tables;
+import net.joostvdg.wwi.model.tables.records.VideoGamesRecord;
+import org.jooq.DSLContext;
+import org.jooq.JSONB;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class VideoGameServiceImpl implements VideoGameService {
+    private final DSLContext create;
 
-    private final Set<VideoGame> videoGames;
-    private final Logger logger = LoggerFactory.getLogger(VideoGameServiceImpl.class);
-    private final AtomicInteger idCounter = new AtomicInteger(1);
-
-    public VideoGameServiceImpl() {
-        this.videoGames = new HashSet<>();
+    public VideoGameServiceImpl(DSLContext create) {
+        this.create = create;
     }
-
 
     @Override
     public VideoGame addVideoGame(VideoGame videoGame) {
-        VideoGame newVideoGame = videoGame;
-        if (videoGame.id() == 0) {
-            newVideoGame = new VideoGame(idCounter.getAndIncrement(), videoGame.title(), videoGame.platform(), videoGame.genre(), videoGame.publisher(), videoGame.developer(), videoGame.year(), videoGame.tags());
-        } else if (videoGames.stream().anyMatch(game -> game.id() == videoGame.id())) {
-            logger.error("VideoGame already exists");
-            throw new IllegalStateException("VideoGame already exists");
+        if (videoGame == null) {
+            throw new IllegalArgumentException("VideoGame cannot be null");
         }
-        videoGames.add(newVideoGame);
+
+        if (videoGame.title() == null || videoGame.title().isBlank()) {
+            throw new IllegalArgumentException("VideoGame title cannot be null or empty");
+        }
+
+        VideoGame foundVideoGame = findVideoGameById(videoGame.id()).orElse(null);
+        if (foundVideoGame != null) {
+            throw new IllegalArgumentException("VideoGame with id " + videoGame.id() + " already exists");
+        }
+
+        String tagsJson = "{}";
+        if (videoGame.tags().isPresent()) {
+            tagsJson = JSON.toJSONString(videoGame.tags().get());
+        }
+
+        VideoGamesRecord newVideoGameRecord = create.insertInto(Tables.VIDEO_GAMES)
+                .set(Tables.VIDEO_GAMES.TITLE, videoGame.title())
+                .set(Tables.VIDEO_GAMES.GENRE, videoGame.genre().toArray(new String[0]))
+                .set(Tables.VIDEO_GAMES.PLATFORM, videoGame.platform())
+                .set(Tables.VIDEO_GAMES.PUBLISHER, videoGame.publisher())
+                .set(Tables.VIDEO_GAMES.DEVELOPER, videoGame.developer())
+                .set(Tables.VIDEO_GAMES.YEAR, videoGame.year())
+                .set(Tables.VIDEO_GAMES.TAGS, JSONB.valueOf(tagsJson))
+                .returning(Tables.VIDEO_GAMES.ID)
+                .fetchOne();
+
+        if (newVideoGameRecord == null) {
+            throw new IllegalStateException("VideoGame could not be created");
+        }
+        var id = newVideoGameRecord.getId();
+        VideoGame newVideoGame = findVideoGameById(id).orElse(null);
+        if (newVideoGame == null) {
+            throw new IllegalStateException("VideoGame could not be created (verification failed)");
+        }
         return newVideoGame;
     }
 
     @Override
-    public Optional<VideoGame> findVideoGameById(long id) {
-        return videoGames.stream()
-                .filter(videoGame -> videoGame.id() == id)
-                .findFirst();
+    public Optional<VideoGame> findVideoGameById(int id) {
+        VideoGamesRecord videoGamesRecord = create.selectFrom(Tables.VIDEO_GAMES).where(Tables.VIDEO_GAMES.ID.eq(id)).fetchOne();
+        if (videoGamesRecord != null) {
+            VideoGame videoGame = translateRecordToVideoGame(videoGamesRecord);
+            return Optional.of(videoGame);
+        }
+        return Optional.empty();
     }
 
     @Override
     public List<VideoGame> findAll() {
-        return new ArrayList<>(videoGames);
+        List<VideoGamesRecord> videoGamesRecords = create.selectFrom(Tables.VIDEO_GAMES).fetch();
+        List<VideoGame> videoGames = new ArrayList<>();
+        for (VideoGamesRecord videoGamesRecord : videoGamesRecords) {
+            VideoGame videoGame = translateRecordToVideoGame(videoGamesRecord);
+            videoGames.add(videoGame);
+        }
+        return videoGames;
+    }
+
+    @Override
+    public void updateVideoGame(VideoGame videoGame) {
+        if (videoGame == null) {
+            throw new IllegalArgumentException("VideoGame cannot be null");
+        }
+
+        if (videoGame.title() == null || videoGame.title().isBlank()) {
+            throw new IllegalArgumentException("VideoGame title cannot be null or empty");
+        }
+
+        VideoGamesRecord foundRecord = create.selectFrom(Tables.VIDEO_GAMES).where(Tables.VIDEO_GAMES.ID.eq(videoGame.id())).fetchOne();
+        if (foundRecord == null) {
+            throw new IllegalArgumentException("VideoGame does not exist");
+        }
+
+        String tagsJson = "{}";
+        if (videoGame.tags().isPresent()) {
+            tagsJson = JSON.toJSONString(videoGame.tags().get());
+        }
+
+        create.update(Tables.VIDEO_GAMES)
+            .set(Tables.VIDEO_GAMES.TITLE, videoGame.title())
+            .set(Tables.VIDEO_GAMES.GENRE, videoGame.genre().toArray(new String[0]))
+            .set(Tables.VIDEO_GAMES.PLATFORM, videoGame.platform())
+            .set(Tables.VIDEO_GAMES.PUBLISHER, videoGame.publisher())
+            .set(Tables.VIDEO_GAMES.DEVELOPER, videoGame.developer())
+            .set(Tables.VIDEO_GAMES.YEAR, videoGame.year())
+            .set(Tables.VIDEO_GAMES.TAGS, JSONB.valueOf(tagsJson))
+            .where(Tables.VIDEO_GAMES.ID.eq(foundRecord.getId()))
+            .execute();
+    }
+
+    private VideoGame translateRecordToVideoGame(VideoGamesRecord videoGamesRecord) {
+        int id = videoGamesRecord.getId();
+        String title = videoGamesRecord.getTitle();
+        String platform = videoGamesRecord.getPlatform();
+        Set<String> genre = new HashSet<>(Arrays.asList(videoGamesRecord.getGenre()));
+        String publisher = videoGamesRecord.getPublisher();
+        String developer = videoGamesRecord.getDeveloper();
+        int year = videoGamesRecord.getYear();
+        Optional<Map<String, String>> tags = Optional.empty();
+        if (videoGamesRecord.getTags() != null) {
+            tags = MediaHelper.translateTags(videoGamesRecord.getTags());
+        }
+        return new VideoGame(id, title, platform, genre, publisher, developer, year, tags);
     }
 }

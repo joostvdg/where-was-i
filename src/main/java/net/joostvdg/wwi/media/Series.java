@@ -6,7 +6,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public record Series(
-        long id,
+        int id,
         String title,
         Set<String> genre,
         Map<String, Integer> seasons, // Map of season name (e.g., "Season 1") to the number of episodes
@@ -33,7 +33,7 @@ public record Series(
     }
 
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
     @Override

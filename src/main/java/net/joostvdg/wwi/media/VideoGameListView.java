@@ -21,15 +21,13 @@ import com.vaadin.flow.router.Route;
 import java.util.*;
 import java.util.stream.Collectors;
 import jakarta.annotation.security.PermitAll;
+import net.joostvdg.wwi.main.Labels;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.main.ViewNotifications;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.user.UserService;
-
-import static net.joostvdg.wwi.tracking.WatchListDetailsView.PLATFORM;
-import static net.joostvdg.wwi.tracking.WatchListDetailsView.TITLE;
 
 @Route(value = "video-games", layout = MainView.class)
 @PageTitle("Movies | Where Was I?")
@@ -61,9 +59,9 @@ public class VideoGameListView extends VerticalLayout {
         configureGridColumns();
 
         // Create search fields
-        titleFilter = new TextField("Title");
-        platformFilter = new TextField("Platform");
-        yearFilter = new ComboBox<>("Year");
+        titleFilter = new TextField(Labels.TITLE);
+        platformFilter = new TextField(Labels.PLATFORM);
+        yearFilter = new ComboBox<>(Labels.YEAR);
         yearFilter.setItems(getYears(videoGameList));
         yearFilter.setPlaceholder("Select year");
 
@@ -114,15 +112,13 @@ public class VideoGameListView extends VerticalLayout {
             actionsLayout.add(viewIcon, editIcon, addToWatchlistIcon);
             return actionsLayout;
         })).setHeader("Actions");
-        videoGameGrid.addColumn(VideoGame::title).setHeader("Title");
-        videoGameGrid.addColumn(VideoGame::platform).setHeader("Platform");
-        videoGameGrid.addColumn(VideoGame::publisher).setHeader("Publisher");
-        videoGameGrid.addColumn(VideoGame::developer).setHeader("Developer");
-        videoGameGrid.addColumn(VideoGame::year).setHeader("Year");
-        videoGameGrid.addColumn(videoGame -> String.join(", ", videoGame.genre())).setHeader("Genres");
+        videoGameGrid.addColumn(VideoGame::title).setHeader(Labels.TITLE);
+        videoGameGrid.addColumn(VideoGame::platform).setHeader(Labels.PLATFORM);
+        videoGameGrid.addColumn(VideoGame::publisher).setHeader(Labels.PUBLISHER);
+        videoGameGrid.addColumn(VideoGame::developer).setHeader(Labels.DEVELOPER);
+        videoGameGrid.addColumn(VideoGame::year).setHeader(Labels.RELEASE_YEAR);
+        videoGameGrid.addColumn(videoGame -> String.join(", ", videoGame.genre())).setHeader(Labels.GENRES);
         videoGameGrid.addColumn(videoGame -> videoGame.tags().map(tags -> tags.toString()).orElse("No tags")).setHeader("Tags");
-
-
     }
 
     private void applyFilters() {
@@ -162,13 +158,13 @@ public class VideoGameListView extends VerticalLayout {
         FormLayout formLayout = new FormLayout();
 
         // Display video game details
-        formLayout.addFormItem(new TextField("Title", videoGame.title()), "Title");
-        formLayout.addFormItem(new TextField("Platform", videoGame.platform()), "Platform");
-        formLayout.addFormItem(new TextField("Publisher", videoGame.publisher()), "Publisher");
-        formLayout.addFormItem(new TextField("Developer", videoGame.developer()), "Developer");
-        formLayout.addFormItem(new TextField("Year", String.valueOf(videoGame.year())), "Year");
-        formLayout.addFormItem(new TextField("Genres", String.join(", ", videoGame.genre())), "Genres");
-        formLayout.addFormItem(new TextField("Tags", videoGame.tags().map(Object::toString).orElse("No tags")), "Tags");
+        formLayout.addFormItem(new TextField(Labels.TITLE, videoGame.title()), Labels.TITLE);
+        formLayout.addFormItem(new TextField(Labels.PLATFORM, videoGame.platform()), Labels.PLATFORM);
+        formLayout.addFormItem(new TextField(Labels.PUBLISHER, videoGame.publisher()), Labels.PUBLISHER);
+        formLayout.addFormItem(new TextField(Labels.DEVELOPER, videoGame.developer()), Labels.DEVELOPER);
+        formLayout.addFormItem(new TextField(Labels.YEAR, String.valueOf(videoGame.year())), Labels.YEAR);
+        formLayout.addFormItem(new TextField(Labels.GENRES, String.join(", ", videoGame.genre())), Labels.GENRES);
+        formLayout.addFormItem(new TextField(Labels.TAGS, videoGame.tags().map(Object::toString).orElse("No tags")), "Tags");
 
         // All fields should be read-only
         formLayout.getChildren().filter( child -> child instanceof TextField)
@@ -195,6 +191,7 @@ public class VideoGameListView extends VerticalLayout {
         // Save button to handle the Video Game edit
         Button saveButton = new Button("Save", event -> {
             try {
+                videoGameService.updateVideoGame(videoGame);
                 videoGameGrid.getDataProvider().refreshItem(videoGame);
                 Notification.show("Video game updated: " + titleField.getValue());
                 dialog.close();
@@ -257,14 +254,14 @@ public class VideoGameListView extends VerticalLayout {
         FormLayout formLayout = new FormLayout();
 
         // Fields for VideoGame creation
-        TextField titleField = new TextField(TITLE);
-        TextField platformField = new TextField(PLATFORM);
-        TextField genreField = new TextField("Genres (comma-separated)");
-        TextField publisherField = new TextField("Publisher");
-        TextField developerField = new TextField("Developer");
-        TextField yearField = new TextField("Release Year");
-        TextField tagsKeyField = new TextField("Tag Key");
-        TextField tagsValueField = new TextField("Tag Value");
+        TextField titleField = new TextField(Labels.TITLE);
+        TextField platformField = new TextField(Labels.PLATFORM);
+        TextField genreField = new TextField(Labels.GENRES_INPUT);
+        TextField publisherField = new TextField(Labels.PUBLISHER);
+        TextField developerField = new TextField(Labels.DEVELOPER);
+        TextField yearField = new TextField(Labels.YEAR);
+        TextField tagsKeyField = new TextField(Labels.TAG_KEY);
+        TextField tagsValueField = new TextField(Labels.TAG_VALUE);
 
         // Container for tags
         Div tagContainer = new Div();

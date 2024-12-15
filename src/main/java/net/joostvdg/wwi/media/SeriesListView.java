@@ -8,7 +8,7 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.Div;
 import com.vaadin.flow.component.html.ListItem;
-import com.vaadin.flow.component.html.Span;
+
 import com.vaadin.flow.component.html.UnorderedList;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
@@ -21,6 +21,7 @@ import com.vaadin.flow.data.renderer.ComponentRenderer;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import jakarta.annotation.security.PermitAll;
+import net.joostvdg.wwi.main.Labels;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.main.ViewNotifications;
 import net.joostvdg.wwi.tracking.WatchList;
@@ -32,8 +33,6 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static net.joostvdg.wwi.tracking.WatchListDetailsView.PLATFORM;
-import static net.joostvdg.wwi.tracking.WatchListDetailsView.TITLE;
 
 @Route(value = "series", layout = MainView.class)
 @PageTitle("Movies | Where Was I?")
@@ -65,8 +64,8 @@ public class SeriesListView extends VerticalLayout {
         configureGridColumns();
 
         // Create search fields
-        titleFilter = new TextField(TITLE);
-        platformFilter = new TextField(PLATFORM);
+        titleFilter = new TextField(Labels.TITLE);
+        platformFilter = new TextField(Labels.PLATFORM);
 
         releaseYearFilter = new ComboBox<>("Release Year");
         releaseYearFilter.setItems(getReleaseYears(seriesList));  // Populate with unique release years
@@ -96,8 +95,8 @@ public class SeriesListView extends VerticalLayout {
         FormLayout formLayout = new FormLayout();
 
         // Fields for Series creation
-        TextField titleField = new TextField(TITLE);
-        TextField platformField = new TextField(PLATFORM);
+        TextField titleField = new TextField(Labels.TITLE);
+        TextField platformField = new TextField(Labels.PLATFORM);
         TextField genreField = new TextField("Genres (comma-separated)");  // Comma-separated genres
         TextField urlField = new TextField("URL (optional)");  // Optional URL
         TextField releaseYearField = new TextField("Release Year");  // Release year

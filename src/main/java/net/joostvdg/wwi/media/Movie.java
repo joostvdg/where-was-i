@@ -5,7 +5,7 @@ import java.util.Optional;
 import java.util.Set;
 
 public record Movie(
-        long id,
+        int id,
         String title,
         String platform,
         String director,
@@ -17,7 +17,7 @@ public record Movie(
 ) implements Media {
 
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
 

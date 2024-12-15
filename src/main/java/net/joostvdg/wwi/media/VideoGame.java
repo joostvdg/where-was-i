@@ -4,7 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
-public record VideoGame(long id, String title, String platform, Set<String> genre, String publisher, String developer, int year, Optional<Map<String, String>> tags ) implements Media {
+public record VideoGame(int id, String title, String platform, Set<String> genre, String publisher, String developer, int year, Optional<Map<String, String>> tags ) implements Media {
 
     public VideoGame {
         if (title == null || title.isBlank()) {
@@ -19,7 +19,7 @@ public record VideoGame(long id, String title, String platform, Set<String> genr
     }
 
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
 
