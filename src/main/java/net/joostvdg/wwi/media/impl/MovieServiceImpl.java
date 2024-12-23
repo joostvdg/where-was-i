@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import net.joostvdg.wwi.model.Tables;
-import com.alibaba.fastjson2.JSON;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -90,7 +89,7 @@ public class MovieServiceImpl implements MovieService {
         logger.info("Translating Movie tags to JSON: {}", movie.tags());
         String tagsJson = "{}";
         if (movie.tags().isPresent()) {
-            tagsJson = JSON.toJSONString(movie.tags().get());
+            tagsJson = MediaHelper.translateTagsToJson(movie.tags().get());
         }
         logger.info("Tags JSON: {}", tagsJson);
 
@@ -142,7 +141,7 @@ public class MovieServiceImpl implements MovieService {
         logger.info("Translating Movie tags to JSON: {}", movieToUpdate.tags());
         String tagsJson = "{}";
         if (movieToUpdate.tags().isPresent()) {
-            tagsJson = JSON.toJSONString(movieToUpdate.tags().get());
+            tagsJson = MediaHelper.translateTagsToJson(movieToUpdate.tags().get());
         }
         logger.info("Tags JSON: {}", tagsJson);
 

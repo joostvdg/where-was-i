@@ -1,6 +1,5 @@
 package net.joostvdg.wwi.media.impl;
 
-import com.alibaba.fastjson.JSON;
 import net.joostvdg.wwi.media.VideoGame;
 import net.joostvdg.wwi.media.VideoGameService;
 import net.joostvdg.wwi.model.Tables;
@@ -36,7 +35,7 @@ public class VideoGameServiceImpl implements VideoGameService {
 
         String tagsJson = "{}";
         if (videoGame.tags().isPresent()) {
-            tagsJson = JSON.toJSONString(videoGame.tags().get());
+            tagsJson = MediaHelper.translateTagsToJson(videoGame.tags().get());
         }
 
         VideoGamesRecord newVideoGameRecord = create.insertInto(Tables.VIDEO_GAMES)
@@ -99,7 +98,7 @@ public class VideoGameServiceImpl implements VideoGameService {
 
         String tagsJson = "{}";
         if (videoGame.tags().isPresent()) {
-            tagsJson = JSON.toJSONString(videoGame.tags().get());
+            tagsJson = MediaHelper.translateTagsToJson(videoGame.tags().get());
         }
 
         create.update(Tables.VIDEO_GAMES)

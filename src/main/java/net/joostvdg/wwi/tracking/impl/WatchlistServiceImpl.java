@@ -1,10 +1,13 @@
 package net.joostvdg.wwi.tracking.impl;
 
 import net.joostvdg.wwi.media.Progress;
+import net.joostvdg.wwi.model.Tables;
+import net.joostvdg.wwi.model.tables.records.SeriesRecord;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.user.UserService;
+import org.jooq.DSLContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -20,12 +23,16 @@ public class WatchlistServiceImpl implements WatchlistService {
     private final Set<WatchList> watchLists;
     private final UserService userService;
 
+    @Deprecated
     private final AtomicInteger idCounter = new AtomicInteger(1);
+
+    private final DSLContext create;
 
     private final Logger logger = LoggerFactory.getLogger(WatchlistServiceImpl.class);
 
-    public WatchlistServiceImpl(UserService userService) {
+    public WatchlistServiceImpl(UserService userService, DSLContext create) {
         this.userService = userService;
+        this.create = create;
         this.watchLists = new HashSet<>();
     }
 
@@ -54,6 +61,12 @@ public class WatchlistServiceImpl implements WatchlistService {
 
     @Override
     public Optional<WatchList> getWatchlistById(Long id) {
+//        SeriesRecord foundRecord = create.selectFrom(Tables.SERIES).where(Tables.SERIES.ID.eq(id)).fetchOne();
+//        if (foundRecord == null) {
+//            return null;
+//        }
+//        return translateRecordToSeries(foundRecord);
+
         return watchLists.stream()
                 .filter(watchList -> watchList.getId() == id)
                 .findFirst();

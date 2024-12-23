@@ -1,14 +1,11 @@
 package net.joostvdg.wwi.media.impl;
 
-import com.alibaba.fastjson.JSON;
 import net.joostvdg.wwi.media.Series;
 import net.joostvdg.wwi.media.SeriesService;
 import net.joostvdg.wwi.model.Tables;
 import net.joostvdg.wwi.model.tables.records.SeriesRecord;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -18,7 +15,6 @@ import java.util.stream.Collectors;
 @Service
 public class SeriesServiceImpl implements SeriesService {
 
-    private final Logger logger = LoggerFactory.getLogger(SeriesServiceImpl.class);
     private final DSLContext create;
 
     public SeriesServiceImpl(DSLContext create) {
@@ -36,20 +32,20 @@ public class SeriesServiceImpl implements SeriesService {
             throw new IllegalArgumentException("Series title cannot be null or empty");
         }
 
-        Series foundSeries = findSeriesById((int) tvSeries.id());
+        Series foundSeries = findSeriesById(tvSeries.id());
         if (foundSeries != null) {
             throw new IllegalArgumentException("Series with id " + tvSeries.id() + " already exists");
         }
 
         String tagsJson = "{}";
         if (tvSeries.tags().isPresent()) {
-            tagsJson = JSON.toJSONString(tvSeries.tags().get());
+            tagsJson = MediaHelper.translateTagsToJson(tvSeries.tags().get());
         }
 
         SeriesRecord newSeriesRecord = create.insertInto(Tables.SERIES)
             .set(Tables.SERIES.TITLE, tvSeries.title())
             .set(Tables.SERIES.GENRE, tvSeries.genre().toArray(new String[0]))
-            .set(Tables.SERIES.SEASONS, JSONB.valueOf(JSON.toJSONString(tvSeries.seasons())))
+            .set(Tables.SERIES.SEASONS, JSONB.valueOf(MediaHelper.translateSeanonsToJson(tvSeries.seasons())))
             .set(Tables.SERIES.PLATFORM, tvSeries.platform())
             .set(Tables.SERIES.URL, tvSeries.url().orElse(null))
             .set(Tables.SERIES.RELEASE_YEAR, tvSeries.releaseYear().map(LocalDate::getYear).orElse(null))
@@ -96,7 +92,7 @@ public class SeriesServiceImpl implements SeriesService {
         String jsonData = seriesRecord.getSeasons().data();
         // TODO: check if this is correct
         if (!jsonData.isBlank()) {
-            seasons = JSON.parseObject(jsonData, Map.class);
+            seasons = MediaHelper.translateJsonToSeasons(jsonData);
         }
 
         Optional<String> optionalUrl = Optional.empty();
