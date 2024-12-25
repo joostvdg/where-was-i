@@ -1,6 +1,7 @@
 package net.joostvdg.wwi.user;
 
 import net.joostvdg.wwi.media.Progress;
+import org.jooq.Record;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -19,4 +20,6 @@ public interface UserService {
     boolean userExists(User selectedUser);
 
     Optional<User> getUserForUsername(String username);
+
+    User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix);
 }

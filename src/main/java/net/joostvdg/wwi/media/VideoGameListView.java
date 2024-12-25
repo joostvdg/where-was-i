@@ -299,17 +299,6 @@ public class VideoGameListView extends VerticalLayout {
                 VideoGame newVideoGame = new VideoGame(0, title, platform, genres, publisher, developer, year, optionalTags);
                 newVideoGame = videoGameService.addVideoGame(newVideoGame);
 
-                // Create SeriesProgress for this new series
-                Map<String, Integer> progressMap = new HashMap<>();
-                progressMap.put("main", 0);
-                progressMap.put("side", 0);
-                progressMap.put("collectibles", 0);
-                progressMap.put("achievements", 0);
-
-                VideoGameProgress videoGameProgress = new VideoGameProgress(0, progressMap,false, newVideoGame,  false);
-                var user = userService.getLoggedInUser();
-                userService.addProgress(user, videoGameProgress);
-
                 updateGrid(newVideoGame);
                 ViewNotifications.showSuccessNotification("New video game added: " + title);
 

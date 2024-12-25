@@ -12,7 +12,7 @@ public interface WatchlistService {
 
     void addWatchList(WatchList watchList);
 
-    Optional<WatchList> getWatchlistById(Long id);
+    Optional<WatchList> getWatchlistById(int id);
 
     Set<Progress> getProgressForWatchlist(WatchList watchList);
 

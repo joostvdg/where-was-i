@@ -2,10 +2,7 @@ package net.joostvdg.wwi;
 
 
 import net.joostvdg.wwi.media.*;
-import net.joostvdg.wwi.model.tables.records.MoviesRecord;
-import net.joostvdg.wwi.model.tables.records.SeriesRecord;
-import net.joostvdg.wwi.model.tables.records.UsersRecord;
-import net.joostvdg.wwi.model.tables.records.VideoGamesRecord;
+import net.joostvdg.wwi.model.tables.records.*;
 import net.joostvdg.wwi.tracking.WatchList;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -30,6 +27,11 @@ import static org.springframework.aot.hint.MemberCategory.PUBLIC_FIELDS;
         Series.class,
         SeriesProgress.class,
         WatchList.class,
+        WatchListRecord.class,
+        WatchListReadSharedRecord.class,
+        WatchListWriteSharedRecord.class,
+        org.jooq.Record.class,
+        org.jooq.Result.class
 })
 @ImportRuntimeHints(ReflectionConfiguration.AppRuntimeHintsRegistrar.class)
 public class ReflectionConfiguration {
@@ -48,6 +50,11 @@ public class ReflectionConfiguration {
                     .registerType(Series.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(SeriesProgress.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(WatchList.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListReadSharedRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListWriteSharedRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(org.jooq.Record.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(org.jooq.Result.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
             ;
         }
     }

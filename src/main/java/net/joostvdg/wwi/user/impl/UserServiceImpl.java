@@ -6,6 +6,7 @@ import net.joostvdg.wwi.model.tables.records.UsersRecord;
 import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.user.UserService;
 import org.jooq.DSLContext;
+import org.jooq.Record;
 import org.jooq.Result;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -231,20 +232,43 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public boolean userExists(User user) {
-        // TODO: validate on User ID
-        // for now, we limit the check to username, which should be unique as well
-        var foundUser = users.stream().filter(u -> u.username().equals(user.username())).findFirst().orElseThrow(() -> new IllegalArgumentException("User does not exist"));
-        return foundUser != null;
+        return getUserForUsername(user.username()).isPresent();
     }
 
     @Override
     public Optional<User> getUserForUsername(String username) {
-        for (User user : users) {
-            if (user.username().equals(username)) {
-                return Optional.of(user);
-            }
+        List<User> usersFound = new ArrayList<>();
+        create.selectFrom(Tables.USERS)
+                .where(Tables.USERS.USERNAME.eq(username))
+                .fetch()
+                .forEach(record -> {
+                    User user = translateRecordToUser(record);
+                    usersFound.add(user);
+                });
+
+        if (usersFound.isEmpty()) {
+            return Optional.empty();
         }
-        return Optional.empty();
+
+        // there should be only one
+        if (usersFound.size() > 1) {
+            throw new IllegalStateException("Multiple users found for username: " + username);
+        }
+
+        return Optional.of(usersFound.getFirst());
+    }
+
+    @Override
+    public User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix) {
+        int userId = watchlistUserViewRecord.get(userDataPrefix + "_user_id", Integer.class);
+        String name = watchlistUserViewRecord.get(userDataPrefix + "_name", String.class);
+        String email = watchlistUserViewRecord.get(userDataPrefix + "_email", String.class);
+        String accountNumber = watchlistUserViewRecord.get(userDataPrefix + "_account_number", String.class);
+        String accountType = watchlistUserViewRecord.get(userDataPrefix + "_account_type", String.class);
+        LocalDateTime dateJoined = watchlistUserViewRecord.get(userDataPrefix + "_date_joined", LocalDateTime.class);
+        LocalDateTime dateLastLogin = watchlistUserViewRecord.get(userDataPrefix + "_date_last_login", LocalDateTime.class);
+
+        return new User(userId, accountNumber, accountType, userDataPrefix, name, email, dateJoined.toLocalDate(), dateLastLogin.toLocalDate(), new HashSet<>());
     }
 
     private User cloneUserWithUpdatedProgress(User user, Set<Progress> progresses) {

@@ -1,14 +1,18 @@
 package net.joostvdg.wwi.media.impl;
 
+import net.joostvdg.wwi.media.Media;
 import net.joostvdg.wwi.media.VideoGame;
 import net.joostvdg.wwi.media.VideoGameService;
 import net.joostvdg.wwi.model.Tables;
 import net.joostvdg.wwi.model.tables.records.VideoGamesRecord;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
+import org.jooq.Record;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class VideoGameServiceImpl implements VideoGameService {
@@ -113,6 +117,26 @@ public class VideoGameServiceImpl implements VideoGameService {
             .execute();
     }
 
+    @Override
+    public Media translateViewRecordToVideoGame(Record watchListViewMediaRecord) {
+        int id = watchListViewMediaRecord.get("media_id", Integer.class);
+        String title = watchListViewMediaRecord.get("media_title", String.class);
+        String platform = watchListViewMediaRecord.get("platform", String.class);
+        Set<String> genre = Arrays.stream(watchListViewMediaRecord.get("genre", String[].class)).collect(Collectors.toSet());
+        String publisher = watchListViewMediaRecord.get("publisher", String.class);
+        String developer = watchListViewMediaRecord.get("developer", String.class);
+        int year = watchListViewMediaRecord.get("year", Integer.class);
+
+        JSONB tagsJSONB = watchListViewMediaRecord.get("tags", JSONB.class);
+        Optional<Map<String, String>> tags = Optional.empty();
+        if (tagsJSONB != null && !tagsJSONB.data().isBlank()) {
+            tags = MediaHelper.translateTags(tagsJSONB);
+        }
+
+        return new VideoGame(id, title, platform, genre, publisher, developer, year, tags);
+    }
+
+    // TODO: is this the same as the record from translateViewRecordToVideoGame?
     private VideoGame translateRecordToVideoGame(VideoGamesRecord videoGamesRecord) {
         int id = videoGamesRecord.getId();
         String title = videoGamesRecord.getTitle();

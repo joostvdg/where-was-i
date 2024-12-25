@@ -16,6 +16,9 @@ public record Series(
         Optional<LocalDate> endYear, // Optional end year
         Optional<Map<String, String>> tags // Optional tags (e.g., {"Director": "John Doe", "Country": "USA"})
 ) implements Media {
+
+    public static final String TYPE = "series";
+
     public Series {
         // Validation logic
         if (title == null || title.isEmpty()) {
@@ -38,7 +41,7 @@ public record Series(
     }
     @Override
     public String getType() {
-        return "Series";
+        return TYPE;
     }
 
     @Override

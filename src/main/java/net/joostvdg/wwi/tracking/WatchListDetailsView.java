@@ -81,7 +81,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         logger.info("Parameter: " + parameter);
 
         // parse the parameter to a Long
-        Long id = Long.parseLong(parameter);
+        Integer id = Integer.parseInt(parameter);
         Optional<WatchList> watchList = watchlistService.getWatchlistById(id);
 
         watchList.ifPresentOrElse(this::showWatchListDetails,

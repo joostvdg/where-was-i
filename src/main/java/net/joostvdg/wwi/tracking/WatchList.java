@@ -7,7 +7,7 @@ import java.time.Instant;
 import java.util.Set;
 
 public class WatchList {
-    private final long id;
+    private final int id;
     private final Set<Media> items; // A set of media items (Movie, Series, VideoGame)
     private final User owner;
     private final Set<User> readShared; // Users who can read this list
@@ -18,7 +18,7 @@ public class WatchList {
     private Instant lastEdit;
     private boolean favorite;
 
-    public WatchList(long id, Set<Media> items, User owner, Set<User> readShared, Set<User> writeShared,
+    public WatchList(int id, Set<Media> items, User owner, Set<User> readShared, Set<User> writeShared,
                      String name, String description, Instant created, Instant lastEdit, boolean favorite) {
         this.id = id;
         this.items = items;
@@ -32,7 +32,7 @@ public class WatchList {
         this.favorite = favorite;
     }
 
-    public long getId() {
+    public int getId() {
         return id;
     }
 

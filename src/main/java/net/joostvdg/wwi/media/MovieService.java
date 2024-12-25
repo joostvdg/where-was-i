@@ -1,5 +1,7 @@
 package net.joostvdg.wwi.media;
 
+import org.jooq.Record;
+
 import java.util.List;
 import java.util.Optional;
 
@@ -10,4 +12,6 @@ public interface MovieService {
     void deleteById(int id);
 
     void update(Movie movieToUpdate);
+
+    Media translateViewRecordToMovie(Record watchListViewMediaRecord);
 }

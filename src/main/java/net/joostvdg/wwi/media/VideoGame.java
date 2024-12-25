@@ -6,6 +6,8 @@ import java.util.Set;
 
 public record VideoGame(int id, String title, String platform, Set<String> genre, String publisher, String developer, int year, Optional<Map<String, String>> tags ) implements Media {
 
+    public static final String TYPE = "videogame";
+
     public VideoGame {
         if (title == null || title.isBlank()) {
             throw new IllegalArgumentException("Title cannot be null or empty");
@@ -30,7 +32,7 @@ public record VideoGame(int id, String title, String platform, Set<String> genre
 
     @Override
     public String getType() {
-        return "Video Game";
+        return TYPE;
     }
 
     @Override

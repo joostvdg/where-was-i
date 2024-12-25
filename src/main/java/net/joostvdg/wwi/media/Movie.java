@@ -16,6 +16,8 @@ public record Movie(
         Optional<Map<String, String>> tags // Optional tags (e.g., {"Director": "John Doe", "Country": "USA"})
 ) implements Media {
 
+    public static final String TYPE = "movie";
+
     @Override
     public int getId() {
         return id;
@@ -23,7 +25,7 @@ public record Movie(
 
     @Override
     public String getType() {
-        return "";
+        return TYPE;
     }
 
     @Override

@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import java.util.Set;
 
 public record User(
-        long id,
+        int id,
         String accountNumber,
         String accountType,
         String username,

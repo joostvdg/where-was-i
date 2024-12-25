@@ -1,11 +1,13 @@
 package net.joostvdg.wwi.media.impl;
 
+import net.joostvdg.wwi.media.Media;
 import net.joostvdg.wwi.media.Series;
 import net.joostvdg.wwi.media.SeriesService;
 import net.joostvdg.wwi.model.Tables;
 import net.joostvdg.wwi.model.tables.records.SeriesRecord;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
+import org.jooq.Record;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -84,6 +86,76 @@ public class SeriesServiceImpl implements SeriesService {
             seriesList.add(series);
         }
         return seriesList;
+    }
+
+    @Override
+    public Media translateViewRecordToSeries(Record record) {
+//        'series' AS media_type,
+//        s.id AS media_id,
+//                s.title AS media_title,
+//        s.seasons,
+//                s.release_year,
+//                s.end_year,
+//                NULL::VARCHAR AS movie_director,
+//        NULL::INTEGER AS movie_duration_in_minutes,
+//        NULL::VARCHAR AS publisher,
+//        NULL::VARCHAR AS developer,
+//        NULL::INTEGER AS year
+//        int id,
+//        String title,
+//        Set<String> genre,
+//        Map<String, Integer> seasons, // Map of season name (e.g., "Season 1") to the number of episodes
+//        String platform, // e.g., Netflix, HBO
+//        Optional<String> url, // URL for the series, optional
+//        Optional<LocalDate> releaseYear, // Optional release year
+//        Optional<LocalDate> endYear, // Optional end year
+//        Optional<Map<String, String>> tags // Optional tags (e.g., {"Director": "John Doe", "Country": "USA"})
+        int id = record.get("media_id", Integer.class);
+        String title = record.get("media_title", String.class);
+        String seasonJSON =  record.get("seasons", JSONB.class).toString();
+        String platform = record.get("platform", String.class);
+
+        Set<String> genre = Arrays.stream(record.get("genre", String[].class)).collect(Collectors.toSet());
+        Map<String, Integer> seasons = new HashMap<>();
+
+        if (!seasonJSON.isBlank()) {
+            seasons = MediaHelper.translateJsonToSeasons(seasonJSON);
+        }
+
+        Optional<String> optionalUrl = Optional.empty();
+        if (record.get("url", String.class) != null && !record.get("url", String.class).isBlank()) {
+            optionalUrl = Optional.of(record.get("url", String.class));
+        }
+
+        Optional<LocalDate> releaseYear = Optional.empty();
+        if (record.get("release_year", Integer.class) != null) {
+            LocalDate releaseDate = LocalDate.of(record.get("release_year", Integer.class), 1, 2);
+            releaseYear = Optional.of(releaseDate);
+        }
+
+        Optional<LocalDate> endYear = Optional.empty();
+        if (record.get("end_year", Integer.class) != null) {
+            LocalDate endDate = LocalDate.of(record.get("end_year", Integer.class), 1, 2);
+            endYear = Optional.of(endDate);
+        }
+
+        JSONB tagsJSONB = record.get("tags", JSONB.class);
+        Optional<Map<String, String>> tags = Optional.empty();
+        if (tagsJSONB != null && !tagsJSONB.data().isBlank()) {
+            tags = MediaHelper.translateTags(tagsJSONB);
+        }
+
+        return new Series(
+            id,
+            title,
+            genre,
+            seasons,
+            platform,
+            optionalUrl,
+            releaseYear,
+            endYear,
+            tags
+        );
     }
 
     private Series translateRecordToSeries(SeriesRecord seriesRecord) {

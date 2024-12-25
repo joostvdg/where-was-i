@@ -1,10 +1,12 @@
 package net.joostvdg.wwi.media.impl;
 
+import net.joostvdg.wwi.media.Media;
 import net.joostvdg.wwi.media.Movie;
 import net.joostvdg.wwi.media.MovieService;
 import net.joostvdg.wwi.model.tables.records.MoviesRecord;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
+import org.jooq.Record;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -156,5 +158,22 @@ public class MovieServiceImpl implements MovieService {
             .set(Tables.MOVIES.TAGS, JSONB.valueOf(tagsJson))
             .where(Tables.MOVIES.ID.eq(foundRecord.getId()))
             .execute();
+    }
+
+    @Override
+    public Media translateViewRecordToMovie(Record record) {
+        Optional<String> optionalUrl = record.get("url", String.class) != null ? Optional.of(record.get("url", String.class)) : Optional.empty();
+
+        return new Movie(
+                record.get("id", Integer.class),
+                record.get("title", String.class),
+                record.get("platform", String.class),
+                record.get("director", String.class),
+                record.get("duration_in_minutes", Integer.class),
+                record.get("release_year", Integer.class),
+                Arrays.stream(record.get("genre", String[].class)).collect(Collectors.toSet()),
+                optionalUrl,
+                MediaHelper.translateTags(record.get("tags", JSONB.class))
+        );
     }
 }
