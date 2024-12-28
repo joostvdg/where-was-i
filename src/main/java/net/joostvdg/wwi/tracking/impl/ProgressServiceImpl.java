@@ -124,6 +124,104 @@ public class ProgressServiceImpl implements ProgressService {
                 .execute();
     }
 
+    @Override
+    public void updateProgress(Progress updatedProgress) {
+        // Determine the type of Progress
+        switch (updatedProgress ) {
+            case MovieProgress movieProgress:
+                updateMovieProgress(movieProgress);
+                break;
+            case SeriesProgress seriesProgress:
+                updateSeriesProgress(seriesProgress);
+                break;
+            case VideoGameProgress videoGameProgress:
+                updateVideoGameProgress(videoGameProgress);
+                break;
+        }
+
+    }
+
+    private void updateVideoGameProgress(VideoGameProgress updatedProgress) {
+        // verify the progress exists
+        var progressRecord = create
+                .selectFrom(Tables.VIDEO_GAME_PROGRESS)
+                .where(Tables.VIDEO_GAME_PROGRESS.ID.eq(updatedProgress.getId()))
+                .fetchOne();
+
+        if (progressRecord == null) {
+            throw new IllegalArgumentException("Progress does not exist");
+        }
+
+        String progressJSON = "";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            progressJSON = objectMapper.writeValueAsString(updatedProgress.getProgress());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        create.update(Tables.VIDEO_GAME_PROGRESS)
+                .set(Tables.VIDEO_GAME_PROGRESS.PROGRESS, JSONB.valueOf(progressJSON))
+                .set(Tables.VIDEO_GAME_PROGRESS.FAVORITE, updatedProgress.isFavorite())
+                .set(Tables.VIDEO_GAME_PROGRESS.FINISHED, updatedProgress.isFinished())
+                .where(Tables.VIDEO_GAME_PROGRESS.ID.eq(updatedProgress.getId()))
+                .execute();
+    }
+
+    private void updateSeriesProgress(SeriesProgress updatedProgress) {
+        // verify the progress exists
+        var progressRecord = create
+                .selectFrom(Tables.SERIES_PROGRESS)
+                .where(Tables.SERIES_PROGRESS.ID.eq(updatedProgress.getId()))
+                .fetchOne();
+
+        if (progressRecord == null) {
+            throw new IllegalArgumentException("Progress does not exist");
+        }
+
+        String progressJSON = "";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            progressJSON = objectMapper.writeValueAsString(updatedProgress.getProgress());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        create.update(Tables.SERIES_PROGRESS)
+                .set(Tables.SERIES_PROGRESS.PROGRESS, JSONB.valueOf(progressJSON))
+                .set(Tables.SERIES_PROGRESS.FAVORITE, updatedProgress.isFavorite())
+                .set(Tables.SERIES_PROGRESS.FINISHED, updatedProgress.isFinished())
+                .where(Tables.SERIES_PROGRESS.ID.eq(updatedProgress.getId()))
+                .execute();
+    }
+
+    private void updateMovieProgress(MovieProgress updatedProgress) {
+        // verify the progress exists
+        var progressRecord = create
+                .selectFrom(Tables.MOVIE_PROGRESS)
+                .where(Tables.MOVIE_PROGRESS.ID.eq(updatedProgress.getId()))
+                .fetchOne();
+
+        if (progressRecord == null) {
+            throw new IllegalArgumentException("Progress does not exist");
+        }
+
+        String progressJSON = "";
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            progressJSON = objectMapper.writeValueAsString(updatedProgress.getProgress());
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+        create.update(Tables.MOVIE_PROGRESS)
+                .set(Tables.MOVIE_PROGRESS.PROGRESS, JSONB.valueOf(progressJSON))
+                .set(Tables.MOVIE_PROGRESS.FAVORITE, updatedProgress.isFavorite())
+                .set(Tables.MOVIE_PROGRESS.FINISHED, updatedProgress.isFinished())
+                .where(Tables.MOVIE_PROGRESS.ID.eq(updatedProgress.getId()))
+                .execute();
+    }
+
     private static String genereateDefaultProgressJSONForVideoGame() {
         Map<String, Integer> videoGameProgress = new HashMap<>();
         videoGameProgress.put("main", 0);

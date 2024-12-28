@@ -3,7 +3,7 @@ package net.joostvdg.wwi.media;
 import java.util.Map;
 
 public record SeriesProgress(
-        long id,
+        int id,
         boolean finished, // Indicates if the series is finished
         Series series, // The series being tracked
         Map<String, Integer> progress, // Progress map (e.g., "Season 1" -> 5, meaning 5 episodes watched)
@@ -24,7 +24,7 @@ public record SeriesProgress(
     }
 
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
 

@@ -34,33 +34,32 @@ import org.slf4j.LoggerFactory;
 
 import java.time.LocalDate;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Route(value = "watchlist-details", layout = MainView.class)
 @PageTitle("Watchlist Details | Where Was I?")
 @PermitAll
 public class WatchListDetailsView extends VerticalLayout implements HasUrlParameter<String> {
 
+    private final transient WatchlistService watchlistService;
+    private final transient SeriesService seriesService;
+    private final transient UserService userService;
+    private final transient VideoGameService videoGameService;
+    private final transient MovieService movieService;
+    private final transient ProgressService progressService;
 
-    private final WatchlistService watchlistService;
+    private final transient Logger logger = LoggerFactory.getLogger(WatchListDetailsView.class);
 
-    private final SeriesService seriesService;
-    private final UserService userService;
-    private final VideoGameService videoGameService;
-    private final MovieService movieService;
-
-    private final Logger logger = LoggerFactory.getLogger(WatchListDetailsView.class);
-
-    private WatchList currentWatchList;
+    private transient WatchList currentWatchList;
     private ListDataProvider<Progress> dataProvider;
     private final FormLayout watchListDetailsForm = new FormLayout(); // Section 1: Watchlist properties
     private final Grid<Progress> progressGrid = new Grid<>(Progress.class, false);
 
-    public WatchListDetailsView(WatchlistService watchlistService, SeriesService seriesService, UserService userService, VideoGameService videoGameService, MovieService movieService) {
+    public WatchListDetailsView(WatchlistService watchlistService, SeriesService seriesService, UserService userService, VideoGameService videoGameService, MovieService movieService, ProgressService progressService) {
         this.watchlistService = watchlistService;
         this.seriesService = seriesService;
         this.videoGameService = videoGameService;
         this.movieService = movieService;
+        this.progressService = progressService;
 
         // Add buttons above the media grid
         HorizontalLayout mediaButtons = new HorizontalLayout();
@@ -78,7 +77,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
     public void setParameter(BeforeEvent event, String parameter) {
         // Find the WatchList by name (parameter), this is a simplified example
         // assume the parameter is the Long id of the WatchList
-        logger.info("Parameter: " + parameter);
+        logger.info("Parameter: {}", parameter);
 
         // parse the parameter to a Long
         Integer id = Integer.parseInt(parameter);
@@ -156,7 +155,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
             Icon editIcon = new Icon(VaadinIcon.EDIT);
             editIcon.getStyle().set("cursor", "pointer");
             editIcon.setColor("red");
-            editIcon.addClickListener(e -> openEditDialog(progress));
+            editIcon.addClickListener(e -> openEditProgressDialog(progress));
 
             actionsLayout.add(viewIcon, editIcon);
             return actionsLayout;
@@ -280,7 +279,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         viewDialog.open();
     }
 
-    private void openEditDialog(Progress progress) {
+    private void openEditProgressDialog(Progress progress) {
         Dialog editDialog = new Dialog();
         FormLayout formLayout = new FormLayout();
         Map<String, Integer> progressMap = new HashMap<>(progress.getProgress());  // Editable progress map
@@ -368,10 +367,9 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 Notification.show("Failed to update progress");
                 return;
             }
-            logger.info("Updated progress: {}", updatedProgress);
-            var user = userService.getLoggedInUser();
-            userService.updateProgress(user, updatedProgress);
 
+            logger.info("Updated progress: {}", updatedProgress);
+            progressService.updateProgress(updatedProgress);
             Notification.show("Progress updated!");
 
             // update the grid

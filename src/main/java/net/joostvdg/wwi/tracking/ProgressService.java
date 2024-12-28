@@ -13,4 +13,6 @@ public interface ProgressService {
     void createSeriesProgressForUser(User user, Series series);
 
     void createVideoGameProgressForUser(User user, VideoGame videoGame);
+
+    void updateProgress(Progress updatedProgress);
 }

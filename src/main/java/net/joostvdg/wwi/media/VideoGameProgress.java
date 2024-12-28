@@ -3,7 +3,7 @@ package net.joostvdg.wwi.media;
 import java.util.Map;
 
 public record VideoGameProgress(
-        long id,
+        int id,
         Map<String, Integer> progress, // Map of progress for each section of the game
         boolean finished, // Indicates if the series is finished
         VideoGame videoGame, // The series being tracked
@@ -29,7 +29,7 @@ public record VideoGameProgress(
     }
 
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
 

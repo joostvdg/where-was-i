@@ -2,7 +2,7 @@ package net.joostvdg.wwi.media;
 
 import java.util.Map;
 
-public record MovieProgress(long id, Movie movie, Map<String, Integer> progress, boolean favorite, boolean finished) implements Progress {
+public record MovieProgress(int id, Movie movie, Map<String, Integer> progress, boolean favorite, boolean finished) implements Progress {
 
     @Override
     public Movie getMedia() {
@@ -10,7 +10,7 @@ public record MovieProgress(long id, Movie movie, Map<String, Integer> progress,
     }
 
     @Override
-    public long getId() {
+    public int getId() {
         return id;
     }
 
