@@ -33,6 +33,11 @@ import static org.springframework.aot.hint.MemberCategory.PUBLIC_FIELDS;
         WatchListRecord.class,
         WatchListReadSharedRecord.class,
         WatchListWriteSharedRecord.class,
+        WatchListWithUsersRecord.class,
+        WatchListWithMediaRecord.class,
+        WatchListMoviesRecord.class,
+        WatchListSeriesRecord.class,
+        WatchListVideoGamesRecord.class,
         AllProgressRecord.class,
         org.jooq.Record.class,
         org.jooq.Result.class
@@ -60,6 +65,11 @@ public class ReflectionConfiguration {
                     .registerType(WatchListRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(WatchListReadSharedRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(WatchListWriteSharedRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListWithUsersRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListWithMediaRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListMoviesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListSeriesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(WatchListVideoGamesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(AllProgressRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(org.jooq.Record.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(org.jooq.Result.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
