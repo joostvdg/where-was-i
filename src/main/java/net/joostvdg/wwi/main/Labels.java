@@ -1,5 +1,7 @@
 package net.joostvdg.wwi.main;
 
+import net.joostvdg.wwi.model.tables.records.*;
+
 public interface Labels {
     String FINISHED = "Finished";
     String FAVORITE = "Favorite";
@@ -24,4 +26,9 @@ public interface Labels {
     String URL = "URL";
     String URL_INPUT = "URL (optional)";
     String END_YEAR_INPUT = "End Year (optional)";
+    String DIRECTOR = "Director";
+    String DURATION_INPUT = "Duration (minutes)";
+    String YEAR_INPUT = "Year (yyyy)";
 }
+
+

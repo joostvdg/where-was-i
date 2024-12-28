@@ -399,13 +399,13 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         FormLayout formLayout = new FormLayout();
 
         // Fields for Movie creation
-        TextField titleField = new TextField("Title");
-        TextField platformField = new TextField("Platform");
-        TextField directorField = new TextField("Director");
-        TextField durationField = new TextField("Duration (in minutes)");
-        TextField releaseYearField = new TextField("Release Year (YYYY)");
-        TextField genreField = new TextField("Genres (comma-separated)");
-        TextField urlField = new TextField("URL (optional)");
+        TextField titleField = new TextField(Labels.TITLE);
+        TextField platformField = new TextField(Labels.PLATFORM);
+        TextField directorField = new TextField(Labels.DIRECTOR);
+        TextField durationField = new TextField(Labels.DURATION_INPUT);
+        TextField releaseYearField = new TextField(Labels.YEAR_INPUT);
+        TextField genreField = new TextField(Labels.GENRES_INPUT);
+        TextField urlField = new TextField(Labels.URL_INPUT);
 
         // Fields for tags
         TextField tagsKeyField = new TextField("Tag Key");
@@ -444,11 +444,10 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 // Create new Movie and add it to the WatchList
                 Movie newMovie = new Movie(0, title, platform, director, duration, releaseYear, genres, url, optionalTags);
                 newMovie = movieService.save(newMovie);
-                currentWatchList.getItems().add(newMovie);
+                watchlistService.addMedia(currentWatchList, newMovie);
+                progressService.createMovieProgressForUser(currentWatchList.getOwner(), newMovie);
 
-                var user = userService.getLoggedInUser();
-                MovieProgress movieProgress = new MovieProgress(0, newMovie, Map.of("Minutes Watched", 0), false, false);
-                userService.addProgress(user, movieProgress);
+                currentWatchList.getItems().add(newMovie);
                 populateProgressGrid(progressGrid);
 
                 ViewNotifications.showSuccessNotification("New movie added: " + title);
@@ -567,15 +566,10 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 // Please read the Series record, and generate a proper constructor call
                 Series newSeries = new Series(0, title, genres, seasons, platform, url, Optional.of(releaseDate), endYear, Optional.of(tags));
                 newSeries = seriesService.addSeries(newSeries);
-                currentWatchList.getItems().add(newSeries);
+                watchlistService.addMedia(currentWatchList, newSeries);
+                progressService.createSeriesProgressForUser(currentWatchList.getOwner(), newSeries);
 
-                // Create SeriesProgress for this new series
-                // create ProgressMap for each Season, setting the progress to 1
-                Map<String, Integer> progressMap = new HashMap<>();
-                seasons.forEach((season, episodes) -> progressMap.put(season, 0));
-                var user = userService.getLoggedInUser();
-                SeriesProgress seriesProgress = new SeriesProgress(0, false, newSeries, progressMap, false);
-                userService.addProgress(user, seriesProgress);
+                currentWatchList.getItems().add(newSeries);
                 populateProgressGrid(progressGrid);
 
                 ViewNotifications.showSuccessNotification("New series added: " + title);
@@ -655,13 +649,10 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
                 // Create new VideoGame and add it to the WatchList
                 VideoGame newVideoGame = new VideoGame(0, title, platform, genres, publisher, developer, year, optionalTags);
                 newVideoGame = videoGameService.addVideoGame(newVideoGame);
+                watchlistService.addMedia(currentWatchList, newVideoGame);
+                progressService.createVideoGameProgressForUser(currentWatchList.getOwner(), newVideoGame);
+
                 currentWatchList.getItems().add(newVideoGame);
-
-                // Create SeriesProgress for this new series
-                var user = userService.getLoggedInUser();
-                VideoGameProgress videoGameProgress = new VideoGameProgress(0, Map.of(),false, newVideoGame,  false);
-                userService.addProgress(user, videoGameProgress);
-
                 populateProgressGrid(progressGrid);
                 ViewNotifications.showSuccessNotification("New video game added: " + title);
 
