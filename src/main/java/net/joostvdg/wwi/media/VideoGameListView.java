@@ -24,6 +24,7 @@ import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.Labels;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.main.ViewNotifications;
+import net.joostvdg.wwi.tracking.ProgressService;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
@@ -34,21 +35,23 @@ import net.joostvdg.wwi.user.UserService;
 @PermitAll
 public class VideoGameListView extends VerticalLayout {
 
-    private Grid<VideoGame> videoGameGrid;
-    private ListDataProvider<VideoGame> dataProvider;
-    private TextField titleFilter;
-    private TextField platformFilter;
-    private ComboBox<Integer> yearFilter;
-    private ComboBox<String> genreFilter;
+    private final Grid<VideoGame> videoGameGrid;
+    private final ListDataProvider<VideoGame> dataProvider;
+    private final TextField titleFilter;
+    private final TextField platformFilter;
+    private final ComboBox<Integer> yearFilter;
+    private final ComboBox<String> genreFilter;
 
-    private final WatchlistService watchlistService;
-    private final VideoGameService videoGameService;
-    private final UserService userService;
+    private final transient WatchlistService watchlistService;
+    private final transient VideoGameService videoGameService;
+    private final transient UserService userService;
+    private final transient ProgressService progressService;
 
-    public VideoGameListView(VideoGameService videoGameService, WatchlistService watchlistService, UserService userService) {
+    public VideoGameListView(VideoGameService videoGameService, WatchlistService watchlistService, UserService userService, ProgressService progressService) {
         this.watchlistService = watchlistService;
         this.videoGameService = videoGameService;
         this.userService = userService;
+        this.progressService = progressService;
         // Fetch all video games from the service (or repository)
         List<VideoGame> videoGameList = videoGameService.findAll();
         dataProvider = new ListDataProvider<>(videoGameList);
@@ -164,7 +167,7 @@ public class VideoGameListView extends VerticalLayout {
         formLayout.addFormItem(new TextField(Labels.DEVELOPER, videoGame.developer()), Labels.DEVELOPER);
         formLayout.addFormItem(new TextField(Labels.YEAR, String.valueOf(videoGame.year())), Labels.YEAR);
         formLayout.addFormItem(new TextField(Labels.GENRES, String.join(", ", videoGame.genre())), Labels.GENRES);
-        formLayout.addFormItem(new TextField(Labels.TAGS, videoGame.tags().map(Object::toString).orElse("No tags")), "Tags");
+        formLayout.addFormItem(new TextField(Labels.TAGS, videoGame.tags().map(Object::toString).orElse("No tags")), Labels.TAGS);
 
         // All fields should be read-only
         formLayout.getChildren().filter( child -> child instanceof TextField)
@@ -181,12 +184,12 @@ public class VideoGameListView extends VerticalLayout {
         FormLayout formLayout = new FormLayout();
 
         // Fields for Video Game editing
-        TextField titleField = new TextField("Title", videoGame.title());
-        TextField platformField = new TextField("Platform", videoGame.platform());
-        TextField publisherField = new TextField("Publisher", videoGame.publisher());
-        TextField developerField = new TextField("Developer", videoGame.developer());
-        TextField yearField = new TextField("Year", String.valueOf(videoGame.year()));
-        TextField genreField = new TextField("Genres (comma-separated)", String.join(", ", videoGame.genre()));
+        TextField titleField = new TextField(Labels.TITLE, videoGame.title());
+        TextField platformField = new TextField(Labels.PLATFORM, videoGame.platform());
+        TextField publisherField = new TextField(Labels.PUBLISHER, videoGame.publisher());
+        TextField developerField = new TextField(Labels.DEVELOPER, videoGame.developer());
+        TextField yearField = new TextField(Labels.YEAR, String.valueOf(videoGame.year()));
+        TextField genreField = new TextField(Labels.GENRES_INPUT, String.join(", ", videoGame.genre()));
 
         // Save button to handle the Video Game edit
         Button saveButton = new Button("Save", event -> {
@@ -235,7 +238,9 @@ public class VideoGameListView extends VerticalLayout {
                 return;
             }
 
-            selectedWatchlist.getItems().add(videoGame);
+            watchlistService.addMedia(selectedWatchlist, videoGame);
+            progressService.createVideoGameProgressForUser(user, videoGame);
+
             ViewNotifications.showSuccessNotification("Video game added to watchlist: " + selectedWatchlist.getName());
             dialog.close();
 

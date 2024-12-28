@@ -15,4 +15,6 @@ public interface VideoGameService {
     void updateVideoGame(VideoGame videoGame);
 
     Media translateViewRecordToVideoGame(Record watchListViewMediaRecord);
+
+    Optional<VideoGame> findById(int id);
 }

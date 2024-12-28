@@ -24,6 +24,7 @@ import com.vaadin.flow.data.provider.ListDataProvider;
 import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.main.ViewNotifications;
+import net.joostvdg.wwi.tracking.ProgressService;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
@@ -47,11 +48,13 @@ public class MovieListView extends VerticalLayout {
     private final MovieService movieService;
     private final WatchlistService watchlistService;
     private final UserService userService;
+    private final ProgressService progressService;
 
-    public MovieListView(MovieService movieService, WatchlistService watchlistService, UserService userService) {
+    public MovieListView(MovieService movieService, WatchlistService watchlistService, UserService userService, ProgressService progressService) {
         this.movieService = movieService;
         this.watchlistService = watchlistService;
         this.userService = userService;
+        this.progressService = progressService;
         // Fetch all movies from the service (or repository)
         List<Movie> movieList = movieService.findAll();
         dataProvider = new ListDataProvider<>(movieList);
@@ -265,8 +268,8 @@ public class MovieListView extends VerticalLayout {
                 return;
             }
 
-            selectedWatchlist.getItems().add(movie);
-            createMovieProgressForUser(user, movie);
+            watchlistService.addMedia(selectedWatchlist, movie);
+            progressService.createMovieProgressForUser(user, movie);
             ViewNotifications.showSuccessNotification("Movie added to watchlist: " + selectedWatchlist.getName());
             dialog.close();
         });
@@ -277,12 +280,6 @@ public class MovieListView extends VerticalLayout {
         dialog.add(formLayout, new HorizontalLayout(addToWatchlistButton, cancelButton));
         dialog.open();
     }
-
-    private void createMovieProgressForUser(User user, Movie movie) {
-        MovieProgress movieProgress = new MovieProgress(0, movie, Map.of("Minutes Watched", 0), false, false);
-        userService.addProgress(user, movieProgress);
-    }
-
 
     private void applyFilters() {
         dataProvider.clearFilters();

@@ -18,4 +18,10 @@ public interface Labels {
     String YEAR = "Year";
     String GENRES = "Genres";
     String TAGS = "Tags";
+    String SEASONS = "Seasons";
+    String NA = "N/A";
+    String END_YEAR = "End Year";
+    String URL = "URL";
+    String URL_INPUT = "URL (optional)";
+    String END_YEAR_INPUT = "End Year (optional)";
 }

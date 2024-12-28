@@ -17,19 +17,23 @@ import static org.springframework.aot.hint.MemberCategory.PUBLIC_FIELDS;
 @Configuration
 @RegisterReflectionForBinding({
         UsersRecord.class,
-        MoviesRecord.class,
-        SeriesRecord.class,
-        VideoGamesRecord.class,
         Movie.class,
+        MoviesRecord.class,
         MovieProgress.class,
+        MovieProgressRecord.class,
         VideoGame.class,
+        VideoGamesRecord.class,
         VideoGameProgress.class,
+        VideoGameProgressRecord.class,
         Series.class,
+        SeriesRecord.class,
         SeriesProgress.class,
+        SeriesProgressRecord.class,
         WatchList.class,
         WatchListRecord.class,
         WatchListReadSharedRecord.class,
         WatchListWriteSharedRecord.class,
+        AllProgressRecord.class,
         org.jooq.Record.class,
         org.jooq.Result.class
 })
@@ -40,19 +44,23 @@ public class ReflectionConfiguration {
         public void registerHints(RuntimeHints hints, ClassLoader classLoader) {
             hints.reflection()
                     .registerType(UsersRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
-                    .registerType(MoviesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
-                    .registerType(SeriesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
-                    .registerType(VideoGamesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(Movie.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(MoviesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(MovieProgress.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(MovieProgressRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(VideoGame.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(VideoGamesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(VideoGameProgress.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(VideoGameProgressRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(Series.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(SeriesRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(SeriesProgress.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(SeriesProgressRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(WatchList.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(WatchListRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(WatchListReadSharedRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(WatchListWriteSharedRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
+                    .registerType(AllProgressRecord.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(org.jooq.Record.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
                     .registerType(org.jooq.Result.class, PUBLIC_FIELDS, INVOKE_PUBLIC_METHODS, INVOKE_PUBLIC_CONSTRUCTORS)
             ;

@@ -4,6 +4,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
+//TODO: add release year, url fields
 public record VideoGame(int id, String title, String platform, Set<String> genre, String publisher, String developer, int year, Optional<Map<String, String>> tags ) implements Media {
 
     public static final String TYPE = "videogame";

@@ -158,6 +158,15 @@ public class SeriesServiceImpl implements SeriesService {
         );
     }
 
+    @Override
+    public Optional<Series> findById(int id) {
+        SeriesRecord seriesRecord = create.selectFrom(Tables.SERIES).where(Tables.SERIES.ID.eq(id)).fetchOne();
+        if (seriesRecord != null) {
+            return Optional.of(translateRecordToSeries(seriesRecord));
+        }
+        return Optional.empty();
+    }
+
     private Series translateRecordToSeries(SeriesRecord seriesRecord) {
         Set<String> genre = Arrays.stream(seriesRecord.getGenre()).collect(Collectors.toSet());
         Map<String, Integer> seasons = new HashMap<>();

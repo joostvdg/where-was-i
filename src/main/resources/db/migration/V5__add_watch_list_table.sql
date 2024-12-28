@@ -105,15 +105,18 @@ CREATE VIEW watch_list_with_media AS
         'movie' AS media_type,
         m.id AS media_id,
         m.title AS media_title,
+        m.platform,
         m.genre AS genre,
         NULL::JSONB AS seasons,
-        NULL::INTEGER AS release_year,
+        m.release_year,
         NULL::INTEGER AS end_year,
         m.director AS movie_director,
         m.duration_in_minutes AS movie_duration_in_minutes,
+        m.url,
         NULL::VARCHAR AS publisher,
         NULL::VARCHAR AS developer,
-        NULL::INTEGER AS year
+        NULL::INTEGER AS year,
+        tags
     FROM watch_list wl
         JOIN watch_list_movies wlm ON wl.id = wlm.watch_list_id
         JOIN movies m ON wlm.movie_id = m.id
@@ -124,15 +127,18 @@ CREATE VIEW watch_list_with_media AS
         'series' AS media_type,
         s.id AS media_id,
         s.title AS media_title,
+        s.platform,
         s.genre AS genre,
         s.seasons,
         s.release_year,
         s.end_year,
         NULL::VARCHAR AS movie_director,
         NULL::INTEGER AS movie_duration_in_minutes,
+        NULL::VARCHAR AS url,
         NULL::VARCHAR AS publisher,
         NULL::VARCHAR AS developer,
-        NULL::INTEGER AS year
+        NULL::INTEGER AS year,
+        tags
     FROM watch_list wl
         JOIN watch_list_series wls ON wl.id = wls.watch_list_id
         JOIN series s ON wls.series_id = s.id
@@ -140,18 +146,21 @@ CREATE VIEW watch_list_with_media AS
     UNION ALL
 
     SELECT wl.id AS watch_list_id,
-        'video_game' AS media_type,
+        'videogame' AS media_type,
         vg.id AS media_id,
         vg.title AS media_title,
+        vg.platform,
         vg.genre AS genre,
         NULL::JSONB AS seasons,
         NULL::INTEGER AS release_year,
         NULL::INTEGER AS end_year,
         NULL::VARCHAR AS movie_director,
         NULL::INTEGER AS movie_duration_in_minutes,
+        NULL::VARCHAR AS url,
         vg.publisher,
         vg.developer,
-        vg.year
+        vg.year,
+        tags
     FROM watch_list wl
         JOIN watch_list_video_games wlv ON wl.id = wlv.watch_list_id
         JOIN video_games vg ON wlv.video_game_id = vg.id;

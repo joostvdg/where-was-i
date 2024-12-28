@@ -388,8 +388,9 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
 
 
     private void populateProgressGrid(Grid<Progress> progressGrid) {
+        // TODO: should this go directly to the Progress Service?
         Set<Progress> progresses = watchlistService.getProgressForWatchlist(currentWatchList);
-        logger.info("Progresses: " + progresses);
+        logger.info("Progresses: {}", progresses);
         dataProvider = new ListDataProvider<>(progresses);
         progressGrid.setDataProvider(dataProvider);
     }

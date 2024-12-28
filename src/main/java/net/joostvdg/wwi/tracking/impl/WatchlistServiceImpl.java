@@ -4,6 +4,7 @@ import net.joostvdg.wwi.media.*;
 import net.joostvdg.wwi.model.tables.records.WatchListRecord;
 import net.joostvdg.wwi.model.tables.records.WatchListWithMediaRecord;
 import net.joostvdg.wwi.model.tables.records.WatchListWithUsersRecord;
+import net.joostvdg.wwi.tracking.ProgressService;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
@@ -11,8 +12,6 @@ import net.joostvdg.wwi.user.UserService;
 import org.jooq.DSLContext;
 import org.jooq.Record;
 import org.jooq.Result;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,7 +19,6 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static net.joostvdg.wwi.model.Tables.*;
 
@@ -31,16 +29,17 @@ public class WatchlistServiceImpl implements WatchlistService {
     private final MovieService movieService;
     private final SeriesService seriesService;
     private final VideoGameService videoGameService;
+    private final ProgressService progressService;
 
     private final DSLContext create;
 
-    private final Logger logger = LoggerFactory.getLogger(WatchlistServiceImpl.class);
 
-    public WatchlistServiceImpl(UserService userService, MovieService movieService, SeriesService seriesService, VideoGameService videoGameService, DSLContext create) {
+    public WatchlistServiceImpl(UserService userService, MovieService movieService, SeriesService seriesService, VideoGameService videoGameService, ProgressService progressService, DSLContext create) {
         this.userService = userService;
         this.movieService = movieService;
         this.seriesService = seriesService;
         this.videoGameService = videoGameService;
+        this.progressService = progressService;
         this.create = create;
     }
 
@@ -195,20 +194,9 @@ public class WatchlistServiceImpl implements WatchlistService {
     }
 
     @Override
-    // TODO: re-enable this when we support Progress via DB
     public Set<Progress> getProgressForWatchlist(WatchList watchList) {
-//        // retrieve the user from the UserService
-//        var user = userService.getUserForUsername(watchList.getOwner().username()).orElseThrow(() -> new IllegalArgumentException("User does not exist"));
-//
-//        // retrieve the progress from the user
-//        var progresses = user.progress();
-//        // filter the progresses to only include the ones that are part of the watchlist
-//        logger.info("Retrieving progresses for user {}: {}", user.username(), progresses);
-//
-//        return progresses.stream()
-//                .filter(progress -> watchList.getItems().contains(progress.getMedia()))
-//                .collect(Collectors.toSet());
-        return Collections.EMPTY_SET;
+        int userId = watchList.getOwner().id();
+        return progressService.getProgressForUserAndMedia(userId, watchList.getItems());
     }
 
     @Override
@@ -315,6 +303,48 @@ public class WatchlistServiceImpl implements WatchlistService {
                 .columns(WATCH_LIST_WRITE_SHARED.WATCH_LIST_ID, WATCH_LIST_WRITE_SHARED.USER_ID)
                 .values((long) watchlist.getId(), (long) selectedUser.id())
                 .execute();
+    }
+
+    @Override
+    public void addMedia(WatchList watchList, Media media) {
+        // verify the watchlist exists by fetching it
+        var watchlistOptional = getWatchlistById(watchList.getId());
+        if (watchlistOptional.isEmpty()) {
+            throw new IllegalArgumentException("Watchlist does not exist");
+        }
+
+        // verify the media exists
+        switch (media.getType()) {
+            case Movie.TYPE -> {
+                if (movieService.findById(media.getId()).isEmpty()) {
+                    throw new IllegalArgumentException("Movie does not exist");
+                }
+                create.insertInto(WATCH_LIST_MOVIES)
+                    .set(WATCH_LIST_MOVIES.WATCH_LIST_ID, (long) watchList.getId())
+                    .set(WATCH_LIST_MOVIES.MOVIE_ID, (long) media.getId())
+                    .execute();
+            }
+            case Series.TYPE -> {
+                if (seriesService.findById(media.getId()).isEmpty()) {
+                    throw new IllegalArgumentException("Series does not exist");
+                }
+                create.insertInto(WATCH_LIST_SERIES)
+                    .set(WATCH_LIST_SERIES.WATCH_LIST_ID, (long) watchList.getId())
+                    .set(WATCH_LIST_SERIES.SERIES_ID, (long) media.getId())
+                    .execute();
+            }
+            case VideoGame.TYPE -> {
+                if (videoGameService.findById(media.getId()).isEmpty()) {
+                    throw new IllegalArgumentException("VideoGame does not exist");
+                }
+                create.insertInto(WATCH_LIST_VIDEO_GAMES)
+                    .set(WATCH_LIST_VIDEO_GAMES.WATCH_LIST_ID, (long) watchList.getId())
+                    .set(WATCH_LIST_VIDEO_GAMES.VIDEO_GAME_ID, (long) media.getId())
+                    .execute();
+            }
+            default -> throw new IllegalArgumentException("Unknown media type");
+        }
+
     }
 
 

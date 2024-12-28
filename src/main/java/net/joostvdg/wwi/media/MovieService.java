@@ -1,5 +1,6 @@
 package net.joostvdg.wwi.media;
 
+import net.joostvdg.wwi.model.tables.records.WatchListWithMediaRecord;
 import org.jooq.Record;
 
 import java.util.List;
@@ -13,5 +14,5 @@ public interface MovieService {
 
     void update(Movie movieToUpdate);
 
-    Media translateViewRecordToMovie(Record watchListViewMediaRecord);
+    Media translateViewRecordToMovie(WatchListWithMediaRecord watchListViewMediaRecord);
 }

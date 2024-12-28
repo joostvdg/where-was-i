@@ -10,7 +10,6 @@ import org.jooq.JSONB;
 import org.jooq.Record;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -134,6 +133,17 @@ public class VideoGameServiceImpl implements VideoGameService {
         }
 
         return new VideoGame(id, title, platform, genre, publisher, developer, year, tags);
+    }
+
+    @Override
+    public Optional<VideoGame> findById(int id) {
+        VideoGamesRecord videoGamesRecord = create.selectFrom(Tables.VIDEO_GAMES).where(Tables.VIDEO_GAMES.ID.eq(id)).fetchOne();
+        if (videoGamesRecord != null) {
+            VideoGame videoGame = translateRecordToVideoGame(videoGamesRecord);
+            return Optional.of(videoGame);
+        }
+
+        return Optional.empty();
     }
 
     // TODO: is this the same as the record from translateViewRecordToVideoGame?

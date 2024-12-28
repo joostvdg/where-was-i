@@ -24,6 +24,7 @@ import jakarta.annotation.security.PermitAll;
 import net.joostvdg.wwi.main.Labels;
 import net.joostvdg.wwi.main.MainView;
 import net.joostvdg.wwi.main.ViewNotifications;
+import net.joostvdg.wwi.tracking.ProgressService;
 import net.joostvdg.wwi.tracking.WatchList;
 import net.joostvdg.wwi.tracking.WatchlistService;
 import net.joostvdg.wwi.user.User;
@@ -39,21 +40,23 @@ import java.util.stream.Collectors;
 @PermitAll // TODO: limit access to Admin users?
 public class SeriesListView extends VerticalLayout {
 
-    private Grid<Series> seriesGrid;
-    private ListDataProvider<Series> dataProvider;
-    private TextField titleFilter;
-    private TextField platformFilter;
-    private ComboBox<Integer> releaseYearFilter;
-    private ComboBox<String> genreFilter;
+    private final Grid<Series> seriesGrid;
+    private final ListDataProvider<Series> dataProvider;
+    private final TextField titleFilter;
+    private final TextField platformFilter;
+    private final ComboBox<Integer> releaseYearFilter;
+    private final ComboBox<String> genreFilter;
 
-    private final SeriesService seriesService;
-    private final UserService userService;
-    private final WatchlistService watchlistService;
+    private final transient SeriesService seriesService;
+    private final transient UserService userService;
+    private final transient WatchlistService watchlistService;
+    private final transient ProgressService progressService;
 
-    public SeriesListView(SeriesService seriesService, UserService userService, WatchlistService watchlistService) {
+    public SeriesListView(SeriesService seriesService, UserService userService, WatchlistService watchlistService, ProgressService progressService) {
         this.seriesService = seriesService;
         this.userService = userService;
         this.watchlistService = watchlistService;
+        this.progressService = progressService;
         // Fetch all series from the service (or repository)
         List<Series> seriesList = seriesService.findAll();
         dataProvider = new ListDataProvider<>(seriesList);
@@ -97,10 +100,10 @@ public class SeriesListView extends VerticalLayout {
         // Fields for Series creation
         TextField titleField = new TextField(Labels.TITLE);
         TextField platformField = new TextField(Labels.PLATFORM);
-        TextField genreField = new TextField("Genres (comma-separated)");  // Comma-separated genres
-        TextField urlField = new TextField("URL (optional)");  // Optional URL
-        TextField releaseYearField = new TextField("Release Year");  // Release year
-        TextField endYearField = new TextField("End Year (optional)");  // Optional end year
+        TextField genreField = new TextField(Labels.GENRES_INPUT);  // Comma-separated genres
+        TextField urlField = new TextField(Labels.URL_INPUT);  // Optional URL
+        TextField releaseYearField = new TextField(Labels.RELEASE_YEAR);  // Release year
+        TextField endYearField = new TextField(Labels.END_YEAR_INPUT);  // Optional end year
 
         // First season default values
         TextField seasonOneField = new TextField("Season 1");
@@ -243,14 +246,14 @@ public class SeriesListView extends VerticalLayout {
         })).setHeader("Actions");
 
         // Add other columns for Series attributes
-        seriesGrid.addColumn(Series::title).setHeader("Title");
-        seriesGrid.addColumn(Series::platform).setHeader("Platform");
-        seriesGrid.addColumn(series -> String.join(", ", series.genre())).setHeader("Genres");
-        seriesGrid.addColumn(series -> series.seasons().toString()).setHeader("Seasons");
-        seriesGrid.addColumn(series -> series.releaseYear().map(LocalDate::toString).orElse("N/A")).setHeader("Release Year");
-        seriesGrid.addColumn(series -> series.endYear().map(LocalDate::toString).orElse("Ongoing")).setHeader("End Year");
-        seriesGrid.addColumn(series -> series.url().orElse("")).setHeader("URL");
-        seriesGrid.addColumn(series -> series.tags().map(Map::toString).orElse("No tags")).setHeader("Tags");
+        seriesGrid.addColumn(Series::title).setHeader(Labels.TITLE);
+        seriesGrid.addColumn(Series::platform).setHeader(Labels.PLATFORM);
+        seriesGrid.addColumn(series -> String.join(", ", series.genre())).setHeader(Labels.GENRES);
+        seriesGrid.addColumn(series -> series.seasons().toString()).setHeader(Labels.SEASONS);
+        seriesGrid.addColumn(series -> series.releaseYear().map(LocalDate::toString).orElse(Labels.NA)).setHeader(Labels.RELEASE_YEAR);
+        seriesGrid.addColumn(series -> series.endYear().map(LocalDate::toString).orElse("Ongoing")).setHeader(Labels.END_YEAR);
+        seriesGrid.addColumn(series -> series.url().orElse("")).setHeader(Labels.URL);
+        seriesGrid.addColumn(series -> series.tags().map(Map::toString).orElse("No tags")).setHeader(Labels.TAGS);
     }
 
     private void applyFilters() {
@@ -295,13 +298,13 @@ public class SeriesListView extends VerticalLayout {
         Dialog dialog = new Dialog();
         FormLayout formLayout = new FormLayout();
 
-        formLayout.addFormItem(new TextField("Title", series.title()), "Title");
-        formLayout.addFormItem(new TextField("Platform", series.platform()), "Platform");
-        formLayout.addFormItem(new TextField("Genres", String.join(", ", series.genre())), "Genres");
-        formLayout.addFormItem(new TextField("Release Year", series.releaseYear().map(LocalDate::toString).orElse("N/A")), "Release Year");
-        formLayout.addFormItem(new TextField("End Year", series.endYear().map(LocalDate::toString).orElse("Ongoing")), "End Year");
-        formLayout.addFormItem(new TextField("URL", series.url().orElse("")), "URL");
-        formLayout.addFormItem(new TextField("Tags", series.tags().map(Map::toString).orElse("No tags")), "Tags");
+        formLayout.addFormItem(new TextField(Labels.TITLE, series.title()), Labels.TITLE);
+        formLayout.addFormItem(new TextField(Labels.PLATFORM, series.platform()), Labels.PLATFORM);
+        formLayout.addFormItem(new TextField(Labels.GENRES, String.join(", ", series.genre())), Labels.GENRES);
+        formLayout.addFormItem(new TextField(Labels.RELEASE_YEAR, series.releaseYear().map(LocalDate::toString).orElse(Labels.NA)), Labels.RELEASE_YEAR);
+        formLayout.addFormItem(new TextField(Labels.END_YEAR, series.endYear().map(LocalDate::toString).orElse("Ongoing")), Labels.END_YEAR);
+        formLayout.addFormItem(new TextField(Labels.URL, series.url().orElse("")), Labels.URL);
+        formLayout.addFormItem(new TextField(Labels.TAGS, series.tags().map(Map::toString).orElse("No tags")), Labels.TAGS);
 
         UnorderedList seasonList = new UnorderedList();
         for (Map.Entry<String, Integer> entry : series.seasons().entrySet()) {
@@ -326,11 +329,11 @@ public class SeriesListView extends VerticalLayout {
         Dialog dialog = new Dialog();
         FormLayout formLayout = new FormLayout();
 
-        TextField titleField = new TextField("Title", series.title());
-        TextField platformField = new TextField("Platform", series.platform());
-        TextField genreField = new TextField("Genres (comma-separated)", String.join(", ", series.genre()));
-        TextField releaseYearField = new TextField("Release Year", series.releaseYear().map(LocalDate::toString).orElse(""));
-        TextField endYearField = new TextField("End Year", series.endYear().map(LocalDate::toString).orElse(""));
+        TextField titleField = new TextField(Labels.TITLE, series.title());
+        TextField platformField = new TextField(Labels.PLATFORM, series.platform());
+        TextField genreField = new TextField(Labels.GENRES_INPUT, String.join(", ", series.genre()));
+        TextField releaseYearField = new TextField(Labels.RELEASE_YEAR, series.releaseYear().map(LocalDate::toString).orElse(""));
+        TextField endYearField = new TextField(Labels.END_YEAR, series.endYear().map(LocalDate::toString).orElse(""));
 
         formLayout.add(titleField, platformField, genreField,  releaseYearField, endYearField);
 
@@ -383,9 +386,8 @@ public class SeriesListView extends VerticalLayout {
                 return;
             }
 
-            selectedWatchList.getItems().add(series);
-            SeriesProgress seriesProgress = new SeriesProgress(0, false, series, progressMap, false);
-            userService.addProgress(user, seriesProgress);
+            watchlistService.addMedia(selectedWatchList, series);
+            progressService.createSeriesProgressForUser(user, series);
 
             ViewNotifications.showSuccessNotification("Series added to WatchList: " + selectedWatchList.getName());
             dialog.close();
