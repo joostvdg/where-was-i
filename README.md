@@ -7,28 +7,29 @@ The best way to create your own project based on this starter is [start.vaadin.c
 
 ## TODO
 
-* Manage the state of the application in a SQL database
-    * Use SQLite for now
-      * Test with DockerCompose: https://thriveread.com/sqlite-docker-container-and-docker-compose/
-    * Use JooQ for SQL API
-    * Use Flyway for database migrations
-      * https://www.red-gate.com/hub/product-learning/flyway/flyway-with-sqlite-for-those-of-a-nervous-disposition
-    * Use TestContainers for integration tests
-    * Use Litestream for SQLite replication
-      * https://litestream.io/
-    * Use sqlite-viewer for debugging
-      * https://github.com/linuxserver/docker-sqlitebrowser
+* Input Validation
+    * https://github.com/secure-coding-practices
+    * looks like SQL Injection is not a problem, as JooQ automatically escapes and uses Prepared Statements
 * Cleanup the code
+    * Spring Modulith
+      * Can we subdivide the generated SQL into separate modules? (e.g., based on Schema, to further separate concerns)
+      * 
+        * spring.modulith.detection-strategy=explicitly-annotated
+        * https://docs.spring.io/spring-modulith/reference/fundamentals.html#customizing-modules
     * Setup Spotless for code formatting
+* Build with GitHub Actions
+    * build the application
     * Setup SonarQube for code quality
     * Setup Snyk for security checks
-    * Upgrade to Spring Boot 3.4.0
-* Build as a native image
-    * Use GraalVM for native image
-    * Can we still use CDS?
+    * build Native Image
+    * build Docker Image
+    * push Docker Image to GitHub Container Registry
+    * deploy to AWS ARM VM?
 * Deploy the application
     * Homelab?
     * AWS ARM VM?
+* Manage the state of the application in a SQL database
+  * Use TestContainers for integration tests
 
 ## Native Image
 

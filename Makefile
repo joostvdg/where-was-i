@@ -8,6 +8,9 @@ export JDBC_DATABASE_PASSWORD=wherewasi
 build:
 	mvnd verify -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
 
+test:
+	mvnd test -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
+
 run:
 	mvn spring-boot:run -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
 

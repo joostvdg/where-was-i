@@ -8,8 +8,7 @@ import com.vaadin.flow.theme.lumo.Lumo;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.ldap.LdapAutoConfiguration;
-import org.springframework.context.annotation.Bean;
-import org.springframework.security.ldap.userdetails.InetOrgPersonContextMapper;
+import org.springframework.modulith.Modulithic;
 
 /**
  * The entry point of the Spring Boot application.
@@ -21,6 +20,7 @@ import org.springframework.security.ldap.userdetails.InetOrgPersonContextMapper;
 @SpringBootApplication(exclude = LdapAutoConfiguration.class)
 @PWA(name = "Project Base for Vaadin with Spring", shortName = "Project Base")
 @Theme(value = "my-theme", variant = Lumo.DARK)
+@Modulithic(systemName="Where Was I?")
 public class Application implements AppShellConfigurator {
 
     public static void main(String[] args) {

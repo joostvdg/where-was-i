@@ -1,6 +1,6 @@
 package net.joostvdg.wwi.user;
 
-import net.joostvdg.wwi.media.Progress;
+
 import org.jooq.Record;
 import org.springframework.stereotype.Component;
 
@@ -10,10 +10,6 @@ import java.util.Optional;
 @Component
 public interface UserService {
     User getLoggedInUser();
-
-    void updateProgress(User user, Progress progress);
-
-    void addProgress(User user, Progress progress);
 
     List<User> getAllUsers();
 
