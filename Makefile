@@ -25,8 +25,9 @@ prod:
 # HEAP: Set max heap for improved and more predictable memory usage.
 # CPU:  Enable more CPU features with '-march=native' for improved performance.
 # QBM:  Use the quick build mode ('-Ob') to speed up builds during development.
+# have to clean first, otherwise it will not work (There can only be one @PWA annotation and it must be set on the AppShellConfigurator implementor)
 native:
-	mvn -Pproduction -Pnative native:compile -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
+	mvnd clean -Pproduction  -Dvaadin.force.production.build=true -Pnative native:compile -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
 
 nrun:
 	./target/where-was-i \

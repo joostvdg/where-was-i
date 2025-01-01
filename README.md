@@ -10,10 +10,12 @@ The best way to create your own project based on this starter is [start.vaadin.c
 * Input Validation
     * https://github.com/secure-coding-practices
     * looks like SQL Injection is not a problem, as JooQ automatically escapes and uses Prepared Statements
-* Cleanup the code
-    * Setup Spotless for code formatting
-    * update security / LDAP config
-      * remove "-Xlint:all,-deprecation" compiler arg
+* Native Build
+    * make sure build succeeds
+    * verify that the application runs
+* make LDAP configurable
+    * ensure we can disable it
+    * ensure we can configure it with environment variables ? or config files?
 * Build with GitHub Actions
     * build the application
     * Setup SonarQube for code quality
