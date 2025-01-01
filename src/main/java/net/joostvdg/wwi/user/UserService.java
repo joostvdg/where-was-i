@@ -1,21 +1,20 @@
+/* (C)2024 */
 package net.joostvdg.wwi.user;
-
-
-import org.jooq.Record;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Optional;
+import org.jooq.Record;
+import org.springframework.stereotype.Component;
 
 @Component
 public interface UserService {
-    User getLoggedInUser();
+  User getLoggedInUser();
 
-    List<User> getAllUsers();
+  List<User> getAllUsers();
 
-    boolean userExists(User selectedUser);
+  boolean userExists(User selectedUser);
 
-    Optional<User> getUserForUsername(String username);
+  Optional<User> getUserForUsername(String username);
 
-    User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix);
+  User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix);
 }

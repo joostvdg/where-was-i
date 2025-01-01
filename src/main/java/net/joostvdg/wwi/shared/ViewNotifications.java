@@ -1,3 +1,4 @@
+/* (C)2024 */
 package net.joostvdg.wwi.shared;
 
 import com.vaadin.flow.component.html.Span;
@@ -10,41 +11,41 @@ import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 
 public class ViewNotifications {
 
-    private ViewNotifications() {
-        // Utility class
-    }
+  private ViewNotifications() {
+    // Utility class
+  }
 
-    public static void showSuccessNotification(String message) {
-        Notification notification = new Notification();
-        notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
+  public static void showSuccessNotification(String message) {
+    Notification notification = new Notification();
+    notification.addThemeVariants(NotificationVariant.LUMO_SUCCESS);
 
-        Icon notificationIcon = VaadinIcon.CHECK.create();
-        notificationIcon.setColor("green");
+    Icon notificationIcon = VaadinIcon.CHECK.create();
+    notificationIcon.setColor("green");
 
-        Span messageSpan = new Span(message);
+    Span messageSpan = new Span(message);
 
-        HorizontalLayout layout = new HorizontalLayout(notificationIcon, messageSpan);
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+    HorizontalLayout layout = new HorizontalLayout(notificationIcon, messageSpan);
+    layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
-        notification.add(layout);
-        notification.setDuration(3000); // Duration in milliseconds
-        notification.open();
-    }
+    notification.add(layout);
+    notification.setDuration(3000); // Duration in milliseconds
+    notification.open();
+  }
 
-    public static void showErrorNotification(String message) {
-        Notification notification = new Notification();
-        notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
+  public static void showErrorNotification(String message) {
+    Notification notification = new Notification();
+    notification.addThemeVariants(NotificationVariant.LUMO_ERROR);
 
-        Icon notificationIcon = VaadinIcon.EXCLAMATION_CIRCLE.create();
-        notificationIcon.setColor("red");
+    Icon notificationIcon = VaadinIcon.EXCLAMATION_CIRCLE.create();
+    notificationIcon.setColor("red");
 
-        Span messageSpan = new Span(message);
+    Span messageSpan = new Span(message);
 
-        HorizontalLayout layout = new HorizontalLayout(notificationIcon, messageSpan);
-        layout.setAlignItems(FlexComponent.Alignment.CENTER);
+    HorizontalLayout layout = new HorizontalLayout(notificationIcon, messageSpan);
+    layout.setAlignItems(FlexComponent.Alignment.CENTER);
 
-        notification.add(layout);
-        notification.setDuration(3000); // Duration in milliseconds
-        notification.open();
-    }
+    notification.add(layout);
+    notification.setDuration(3000); // Duration in milliseconds
+    notification.open();
+  }
 }

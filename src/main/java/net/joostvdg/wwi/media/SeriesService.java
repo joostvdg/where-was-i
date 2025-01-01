@@ -1,16 +1,16 @@
+/* (C)2024 */
 package net.joostvdg.wwi.media;
-
-import org.jooq.Record;
 
 import java.util.List;
 import java.util.Optional;
+import org.jooq.Record;
 
 public interface SeriesService {
-    Series addSeries(Series newSeries);
+  Series addSeries(Series newSeries);
 
-    List<Series> findAll();
+  List<Series> findAll();
 
-    Media translateViewRecordToSeries(Record watchListViewMediaRecord);
+  Media translateViewRecordToSeries(Record watchListViewMediaRecord);
 
-    Optional<Series> findById(int id);
+  Optional<Series> findById(int id);
 }

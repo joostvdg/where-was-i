@@ -11,12 +11,9 @@ The best way to create your own project based on this starter is [start.vaadin.c
     * https://github.com/secure-coding-practices
     * looks like SQL Injection is not a problem, as JooQ automatically escapes and uses Prepared Statements
 * Cleanup the code
-    * Spring Modulith
-      * Can we subdivide the generated SQL into separate modules? (e.g., based on Schema, to further separate concerns)
-      * 
-        * spring.modulith.detection-strategy=explicitly-annotated
-        * https://docs.spring.io/spring-modulith/reference/fundamentals.html#customizing-modules
     * Setup Spotless for code formatting
+    * update security / LDAP config
+      * remove "-Xlint:all,-deprecation" compiler arg
 * Build with GitHub Actions
     * build the application
     * Setup SonarQube for code quality

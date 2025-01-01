@@ -1,11 +1,13 @@
+/* (C)2024 */
 package net.joostvdg.wwi.media.internal;
 
+import java.util.*;
+import java.util.stream.Collectors;
 import net.joostvdg.wwi.media.Media;
 import net.joostvdg.wwi.media.Movie;
 import net.joostvdg.wwi.media.MovieService;
 import net.joostvdg.wwi.model.wwi_media.Tables;
 import net.joostvdg.wwi.model.wwi_media.tables.records.MoviesRecord;
-import net.joostvdg.wwi.model.wwi_watchlist.tables.records.WatchListWithMediaRecord;
 import org.jooq.DSLContext;
 import org.jooq.JSONB;
 import org.jooq.Record;
@@ -13,93 +15,96 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
-
-import java.util.*;
-import java.util.stream.Collectors;
-
 @Service
 public class MovieServiceImpl implements MovieService {
 
+  private final Logger logger = LoggerFactory.getLogger(MovieServiceImpl.class);
+  private final DSLContext create;
 
-    private final Logger logger = LoggerFactory.getLogger(MovieServiceImpl.class);
-    private final DSLContext create;
+  public MovieServiceImpl(DSLContext create) {
+    this.create = create;
+  }
 
-    public MovieServiceImpl(DSLContext create) {
-        this.create = create;
+  @Override
+  public List<Movie> findAll() {
+
+    List<Movie> movies = new ArrayList<>();
+    create
+        .selectFrom(Tables.MOVIES)
+        .fetch()
+        .forEach(
+            record -> {
+              Movie movie = translateRecordToMovie(record);
+              movies.add(movie);
+            });
+
+    return movies;
+  }
+
+  private Movie translateRecordToMovie(MoviesRecord moviesRecord) {
+
+    Optional<String> optionalUrl =
+        moviesRecord.getUrl() != null ? Optional.of(moviesRecord.getUrl()) : Optional.empty();
+
+    return new Movie(
+        moviesRecord.getId(),
+        moviesRecord.getTitle(),
+        moviesRecord.getPlatform(),
+        moviesRecord.getDirector(),
+        moviesRecord.getDurationInMinutes(),
+        moviesRecord.getReleaseYear(),
+        Arrays.stream(moviesRecord.getGenre()).collect(Collectors.toSet()),
+        optionalUrl,
+        MediaHelper.translateTags(moviesRecord.getTags()));
+  }
+
+  @Override
+  public Optional<Movie> findById(int id) {
+    MoviesRecord foundRecord =
+        create.selectFrom(Tables.MOVIES).where(Tables.MOVIES.ID.eq(id)).fetch().getFirst();
+    if (foundRecord != null) {
+      return Optional.of(translateRecordToMovie(foundRecord));
+    }
+    return Optional.empty();
+  }
+
+  // TODO: is this unique enough?
+  MoviesRecord findMovieByTitleAndYear(String title, int year) {
+    return create
+        .selectFrom(Tables.MOVIES)
+        .where(Tables.MOVIES.TITLE.eq(title).and(Tables.MOVIES.RELEASE_YEAR.eq(year)))
+        .fetchOne();
+  }
+
+  @Override
+  public Movie save(Movie movie) {
+
+    if (movie == null) {
+      throw new IllegalArgumentException("Movie cannot be null");
     }
 
-    @Override
-    public List<Movie> findAll() {
-
-        List<Movie> movies = new ArrayList<>();
-        create.selectFrom(Tables.MOVIES).fetch().forEach(record -> {
-            Movie movie = translateRecordToMovie(record);
-            movies.add(movie);
-        });
-
-        return movies;
+    if (movie.title() == null || movie.title().isBlank()) {
+      throw new IllegalArgumentException("Movie title cannot be null or empty");
     }
 
-    private Movie translateRecordToMovie(MoviesRecord moviesRecord) {
-
-        Optional<String> optionalUrl = moviesRecord.getUrl() != null ? Optional.of(moviesRecord.getUrl()) : Optional.empty();
-
-        return new Movie(
-                moviesRecord.getId(),
-                moviesRecord.getTitle(),
-                moviesRecord.getPlatform(),
-                moviesRecord.getDirector(),
-                moviesRecord.getDurationInMinutes(),
-                moviesRecord.getReleaseYear(),
-                Arrays.stream(moviesRecord.getGenre()).collect(Collectors.toSet()),
-                optionalUrl,
-                MediaHelper.translateTags(moviesRecord.getTags())
-        );
+    // Verify if the movie already exists
+    MoviesRecord foundRecord = findMovieByTitleAndYear(movie.title(), movie.releaseYear());
+    if (foundRecord != null) {
+      throw new IllegalArgumentException("Movie already exists (by title and year)");
     }
 
-
-
-    @Override
-    public Optional<Movie> findById(int id) {
-        MoviesRecord foundRecord = create.selectFrom(Tables.MOVIES).where(Tables.MOVIES.ID.eq(id)).fetch().getFirst();
-        if (foundRecord != null) {
-            return Optional.of(translateRecordToMovie(foundRecord));
-        }
-        return Optional.empty();
+    logger.info("Translating Movie tags to JSON: {}", movie.tags());
+    String tagsJson = "{}";
+    if (movie.tags().isPresent()) {
+      tagsJson = MediaHelper.translateTagsToJson(movie.tags().get());
     }
+    logger.info("Tags JSON: {}", tagsJson);
 
-    // TODO: is this unique enough?
-    MoviesRecord findMovieByTitleAndYear(String title, int year) {
-        return create.selectFrom(Tables.MOVIES).where(Tables.MOVIES.TITLE.eq(title).and(Tables.MOVIES.RELEASE_YEAR.eq(year))).fetchOne();
-    }
-
-    @Override
-    public Movie save(Movie movie) {
-
-        if (movie == null) {
-            throw new IllegalArgumentException("Movie cannot be null");
-        }
-
-        if (movie.title() == null || movie.title().isBlank()) {
-            throw new IllegalArgumentException("Movie title cannot be null or empty");
-        }
-
-        // Verify if the movie already exists
-        MoviesRecord foundRecord = findMovieByTitleAndYear(movie.title(), movie.releaseYear());
-        if (foundRecord != null) {
-            throw new IllegalArgumentException("Movie already exists (by title and year)");
-        }
-
-        logger.info("Translating Movie tags to JSON: {}", movie.tags());
-        String tagsJson = "{}";
-        if (movie.tags().isPresent()) {
-            tagsJson = MediaHelper.translateTagsToJson(movie.tags().get());
-        }
-        logger.info("Tags JSON: {}", tagsJson);
-
-        // Create a new movie
-        logger.info("Creating new Movie: {}", movie.title());
-        MoviesRecord newMovieRecord = create.insertInto(Tables.MOVIES)
+    // Create a new movie
+    logger.info("Creating new Movie: {}", movie.title());
+    MoviesRecord newMovieRecord =
+        create
+            .insertInto(Tables.MOVIES)
             .set(Tables.MOVIES.TITLE, movie.title())
             .set(Tables.MOVIES.PLATFORM, movie.platform())
             .set(Tables.MOVIES.DIRECTOR, movie.director())
@@ -108,74 +113,78 @@ public class MovieServiceImpl implements MovieService {
             .set(Tables.MOVIES.GENRE, movie.genre().toArray(new String[0]))
             .set(Tables.MOVIES.URL, movie.url().orElse(null))
             .set(Tables.MOVIES.TAGS, JSONB.valueOf(tagsJson))
-                .returning(Tables.MOVIES.ID)
-                .fetchOne();
+            .returning(Tables.MOVIES.ID)
+            .fetchOne();
 
-        if (newMovieRecord == null) {
-            throw new IllegalStateException("Movie could not be created");
-        }
-        return findById(newMovieRecord.getId()).orElseThrow();
+    if (newMovieRecord == null) {
+      throw new IllegalStateException("Movie could not be created");
+    }
+    return findById(newMovieRecord.getId()).orElseThrow();
+  }
+
+  @Override
+  public void deleteById(int id) {
+    logger.info("Deleting Movie with id: {}", id);
+    if (id < 1) {
+      throw new IllegalArgumentException("Movie id cannot be 0 or negative");
+    }
+    create.deleteFrom(Tables.MOVIES).where(Tables.MOVIES.ID.eq(id)).execute();
+  }
+
+  // TODO: optimize this, to avoid duplication from Save method
+  @Override
+  public void update(Movie movieToUpdate) {
+    if (movieToUpdate == null) {
+      throw new IllegalArgumentException("Movie cannot be null");
     }
 
-    @Override
-    public void deleteById(int id) {
-        logger.info("Deleting Movie with id: {}", id);
-        if (id < 1) {
-            throw new IllegalArgumentException("Movie id cannot be 0 or negative");
-        }
-        create.deleteFrom(Tables.MOVIES).where(Tables.MOVIES.ID.eq(id)).execute();
+    if (movieToUpdate.title() == null || movieToUpdate.title().isBlank()) {
+      throw new IllegalArgumentException("Movie title cannot be null or empty");
     }
 
-    // TODO: optimize this, to avoid duplication from Save method
-    @Override
-    public void update(Movie movieToUpdate) {
-        if (movieToUpdate == null) {
-            throw new IllegalArgumentException("Movie cannot be null");
-        }
-
-        if (movieToUpdate.title() == null || movieToUpdate.title().isBlank()) {
-            throw new IllegalArgumentException("Movie title cannot be null or empty");
-        }
-
-        MoviesRecord foundRecord = findMovieByTitleAndYear(movieToUpdate.title(), movieToUpdate.releaseYear());
-        if (foundRecord == null) {
-            throw new IllegalArgumentException("Movie does not exist");
-        }
-
-        logger.info("Translating Movie tags to JSON: {}", movieToUpdate.tags());
-        String tagsJson = "{}";
-        if (movieToUpdate.tags().isPresent()) {
-            tagsJson = MediaHelper.translateTagsToJson(movieToUpdate.tags().get());
-        }
-        logger.info("Tags JSON: {}", tagsJson);
-
-        create.update(Tables.MOVIES)
-            .set(Tables.MOVIES.TITLE, movieToUpdate.title())
-            .set(Tables.MOVIES.PLATFORM, movieToUpdate.platform())
-            .set(Tables.MOVIES.DIRECTOR, movieToUpdate.director())
-            .set(Tables.MOVIES.DURATION_IN_MINUTES, movieToUpdate.durationInMinutes())
-            .set(Tables.MOVIES.RELEASE_YEAR, movieToUpdate.releaseYear())
-            .set(Tables.MOVIES.GENRE, movieToUpdate.genre().toArray(new String[0]))
-            .set(Tables.MOVIES.URL, movieToUpdate.url().orElse(null))
-            .set(Tables.MOVIES.TAGS, JSONB.valueOf(tagsJson))
-            .where(Tables.MOVIES.ID.eq(foundRecord.getId()))
-            .execute();
+    MoviesRecord foundRecord =
+        findMovieByTitleAndYear(movieToUpdate.title(), movieToUpdate.releaseYear());
+    if (foundRecord == null) {
+      throw new IllegalArgumentException("Movie does not exist");
     }
 
-    @Override
-    public Media translateViewRecordToMovie(Record rec) {
-        Optional<String> optionalUrl = rec.get("url", String.class) != null ? Optional.of(rec.get("url", String.class)) : Optional.empty();
-
-        return new Movie(
-                rec.get("media_id", Integer.class),
-                rec.get("media_title", String.class),
-                rec.get("platform", String.class),
-                rec.get("movie_director", String.class),
-                rec.get("movie_duration_in_minutes", Integer.class),
-                rec.get("release_year", Integer.class),
-                Arrays.stream(rec.get("genre", String[].class)).collect(Collectors.toSet()),
-                optionalUrl,
-                MediaHelper.translateTags(rec.get("tags", JSONB.class))
-        );
+    logger.info("Translating Movie tags to JSON: {}", movieToUpdate.tags());
+    String tagsJson = "{}";
+    if (movieToUpdate.tags().isPresent()) {
+      tagsJson = MediaHelper.translateTagsToJson(movieToUpdate.tags().get());
     }
+    logger.info("Tags JSON: {}", tagsJson);
+
+    create
+        .update(Tables.MOVIES)
+        .set(Tables.MOVIES.TITLE, movieToUpdate.title())
+        .set(Tables.MOVIES.PLATFORM, movieToUpdate.platform())
+        .set(Tables.MOVIES.DIRECTOR, movieToUpdate.director())
+        .set(Tables.MOVIES.DURATION_IN_MINUTES, movieToUpdate.durationInMinutes())
+        .set(Tables.MOVIES.RELEASE_YEAR, movieToUpdate.releaseYear())
+        .set(Tables.MOVIES.GENRE, movieToUpdate.genre().toArray(new String[0]))
+        .set(Tables.MOVIES.URL, movieToUpdate.url().orElse(null))
+        .set(Tables.MOVIES.TAGS, JSONB.valueOf(tagsJson))
+        .where(Tables.MOVIES.ID.eq(foundRecord.getId()))
+        .execute();
+  }
+
+  @Override
+  public Media translateViewRecordToMovie(Record rec) {
+    Optional<String> optionalUrl =
+        rec.get("url", String.class) != null
+            ? Optional.of(rec.get("url", String.class))
+            : Optional.empty();
+
+    return new Movie(
+        rec.get("media_id", Integer.class),
+        rec.get("media_title", String.class),
+        rec.get("platform", String.class),
+        rec.get("movie_director", String.class),
+        rec.get("movie_duration_in_minutes", Integer.class),
+        rec.get("release_year", Integer.class),
+        Arrays.stream(rec.get("genre", String[].class)).collect(Collectors.toSet()),
+        optionalUrl,
+        MediaHelper.translateTags(rec.get("tags", JSONB.class)));
+  }
 }
