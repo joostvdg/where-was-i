@@ -1,6 +1,8 @@
 /* (C)2024 */
 package net.joostvdg.wwi.user.internal;
 
+import com.vaadin.flow.server.VaadinSession;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -34,6 +36,10 @@ public class UserServiceImpl implements UserService {
 
   @Override
   public User getLoggedInUser() {
+
+    if (VaadinSession.getCurrent().getAttribute("user") != null) {
+      return (User) VaadinSession.getCurrent().getAttribute("user");
+    }
 
     Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
     String username = "Unknown";
@@ -77,7 +83,9 @@ public class UserServiceImpl implements UserService {
         logger.warn("Principal is unknown");
     }
 
-    return findOrCreateUser(username, externalId, accountType, name, email);
+    User user = findOrCreateUser(username, externalId, accountType, name, email);
+    VaadinSession.getCurrent().setAttribute("user", user);
+    return user;
   }
 
   private User findOrCreateUser(
@@ -178,27 +186,50 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix) {
-    int userId = watchlistUserViewRecord.get(userDataPrefix + "_user_id", Integer.class);
+  public User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix, boolean fullUser) {
+    if (watchlistUserViewRecord.get(userDataPrefix + "_id") == null) {
+      return null;
+    }
+    int userId = watchlistUserViewRecord.get(userDataPrefix + "_id", Integer.class);
     String name = watchlistUserViewRecord.get(userDataPrefix + "_name", String.class);
     String email = watchlistUserViewRecord.get(userDataPrefix + "_email", String.class);
-    String accountNumber =
-        watchlistUserViewRecord.get(userDataPrefix + "_account_number", String.class);
-    String accountType =
-        watchlistUserViewRecord.get(userDataPrefix + "_account_type", String.class);
-    LocalDateTime dateJoined =
-        watchlistUserViewRecord.get(userDataPrefix + "_date_joined", LocalDateTime.class);
-    LocalDateTime dateLastLogin =
-        watchlistUserViewRecord.get(userDataPrefix + "_date_last_login", LocalDateTime.class);
+
+    LocalDate dateJoined = null;
+    LocalDate dateLastLogin = null;
+    String accountNumber = "";
+    String accountType = "";
+
+    // The Read and Write shared users only have the id, name, and email in the View
+    if (fullUser) {
+      accountNumber =
+              watchlistUserViewRecord.get(userDataPrefix + "_account_number", String.class);
+      accountType =
+              watchlistUserViewRecord.get(userDataPrefix + "_account_type", String.class);
+      LocalDateTime dateTimeJoined =
+              watchlistUserViewRecord.get(userDataPrefix + "_date_joined", LocalDateTime.class);
+      LocalDateTime dateTimeLastLogin =
+              watchlistUserViewRecord.get(userDataPrefix + "_date_last_login", LocalDateTime.class);
+      if (dateTimeJoined != null) {
+        dateJoined = dateTimeJoined.toLocalDate();
+      }
+
+
+      if (dateTimeLastLogin != null) {
+        dateLastLogin = dateTimeLastLogin.toLocalDate();
+      }
+    }
+
 
     return new User(
-        userId,
-        accountNumber,
-        accountType,
-        userDataPrefix,
-        name,
-        email,
-        dateJoined.toLocalDate(),
-        dateLastLogin.toLocalDate());
+        userId, accountNumber, accountType, userDataPrefix, name, email, dateJoined, dateLastLogin);
+  }
+
+  @Override
+  public User getUserById(int userId) {
+    UsersRecord usersRecord = create.fetchOne(Tables.USERS, Tables.USERS.ID.eq(userId));
+    if (usersRecord == null) {
+      return null;
+    }
+    return translateRecordToUser(usersRecord);
   }
 }

@@ -15,7 +15,9 @@ public interface WatchlistService {
 
   List<WatchList> findSharedWith(User loggedInUser);
 
-  void shareWatchlist(WatchList watchlist, User selectedUser);
+  List<User> findSharedWithUsers(int watchListId);
+
+  void shareWatchlist(WatchList watchlist, User shareWith);
 
   void addMedia(WatchList watchList, Media media);
 }

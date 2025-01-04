@@ -182,7 +182,16 @@ public class WatchListView extends VerticalLayout {
 
     // Search field for users
     ComboBox<User> userSearch = new ComboBox<>("Share With");
-    userSearch.setItems(userService.getAllUsers());
+    List<User> users = userService.getAllUsers();
+
+    for (User user : users) {
+      if (user.id() == userService.getLoggedInUser().id()) {
+        users.remove(user);
+        break;
+      }
+    }
+
+    userSearch.setItems(users);
     userSearch.setItemLabelGenerator(
         user -> user.username() + " (" + user.accountNumber() + ", " + user.accountType() + ")");
 

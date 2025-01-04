@@ -8,20 +8,21 @@ import net.joostvdg.wwi.model.wwi_watchlist.tables.records.WatchListWithUsersRec
 
 class WatchListViewResult {
   long id;
-  WatchListWithUsersRecord watchlistUserViewRecord;
+  List<WatchListWithUsersRecord> watchlistUserViewRecords;
   List<WatchListWithMediaRecord> watchListMediaViewRecords;
 
   public WatchListViewResult(long id) {
     this.id = id;
     this.watchListMediaViewRecords = new ArrayList<>();
+    this.watchlistUserViewRecords = new ArrayList<>();
   }
 
   public WatchListViewResult(
       long id,
-      WatchListWithUsersRecord watchlistUserViewRecord,
+      List<WatchListWithUsersRecord> watchlistUserViewRecords,
       List<WatchListWithMediaRecord> watchListMediaViewRecords) {
     this.id = id;
-    this.watchlistUserViewRecord = watchlistUserViewRecord;
+    this.watchlistUserViewRecords = watchlistUserViewRecords;
     this.watchListMediaViewRecords = watchListMediaViewRecords;
   }
 
@@ -29,12 +30,12 @@ class WatchListViewResult {
     return id;
   }
 
-  public WatchListWithUsersRecord getWatchlistUserViewRecord() {
-    return watchlistUserViewRecord;
+  public List<WatchListWithUsersRecord> getWatchlistUserViewRecords() {
+    return watchlistUserViewRecords;
   }
 
-  public void setWatchlistUserViewRecord(WatchListWithUsersRecord watchlistUserViewRecord) {
-    this.watchlistUserViewRecord = watchlistUserViewRecord;
+  public void setWatchlistUserViewRecord(List<WatchListWithUsersRecord> watchlistUserViewRecords) {
+    this.watchlistUserViewRecords = watchlistUserViewRecords;
   }
 
   public List<WatchListWithMediaRecord> getWatchListMediaViewRecords() {
@@ -48,5 +49,9 @@ class WatchListViewResult {
 
   public void addWatchListMediaViewRecord(WatchListWithMediaRecord watchListWithMediaRecord) {
     this.watchListMediaViewRecords.add(watchListWithMediaRecord);
+  }
+
+  public void addWatchlistUserViewRecord(WatchListWithUsersRecord watchListWithUsersRecord) {
+    this.watchlistUserViewRecords.add(watchListWithUsersRecord);
   }
 }

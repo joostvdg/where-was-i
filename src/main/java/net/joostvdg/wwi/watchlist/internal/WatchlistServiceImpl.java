@@ -15,6 +15,7 @@ import net.joostvdg.wwi.media.Series;
 import net.joostvdg.wwi.media.SeriesService;
 import net.joostvdg.wwi.media.VideoGame;
 import net.joostvdg.wwi.media.VideoGameService;
+import net.joostvdg.wwi.model.wwi_watchlist.tables.records.WatchListReadSharedRecord;
 import net.joostvdg.wwi.model.wwi_watchlist.tables.records.WatchListRecord;
 import net.joostvdg.wwi.model.wwi_watchlist.tables.records.WatchListWithMediaRecord;
 import net.joostvdg.wwi.model.wwi_watchlist.tables.records.WatchListWithUsersRecord;
@@ -147,11 +148,11 @@ public class WatchlistServiceImpl implements WatchlistService {
         .fetch();
   }
 
-  private WatchListWithUsersRecord getWatchListWithUsersById(int id) {
+  private List<WatchListWithUsersRecord> getWatchListWithUsersById(int id) {
     return create
         .selectFrom(WATCH_LIST_WITH_USERS)
         .where(WATCH_LIST_WITH_USERS.WATCH_LIST_ID.eq(id))
-        .fetchOne();
+        .fetch();
   }
 
   private Result<WatchListWithUsersRecord> getWatchListsWithUsersByOwnerId(int ownerId) {
@@ -164,8 +165,8 @@ public class WatchlistServiceImpl implements WatchlistService {
   @Override
   public Optional<WatchList> getWatchlistById(int id) {
     // Collect WatchList with users
-    WatchListWithUsersRecord watchlistUserViewRecord = getWatchListWithUsersById(id);
-    if (watchlistUserViewRecord == null) {
+    List<WatchListWithUsersRecord> watchlistUserViewRecords = getWatchListWithUsersById(id);
+    if (watchlistUserViewRecords.isEmpty()) {
       return Optional.empty();
     }
 
@@ -177,13 +178,17 @@ public class WatchlistServiceImpl implements WatchlistService {
 
     // Translate to WatchList
     return Optional.of(
-        translateViewRecordsToWatchList(watchlistUserViewRecord, watchListMediaViewRecordList));
+        translateViewRecordsToWatchList(watchlistUserViewRecords, watchListMediaViewRecordList));
   }
 
-  private WatchList translateViewRecordsToWatchList(
-      WatchListWithUsersRecord watchlistUserViewRecord,
+  private WatchList
+  translateViewRecordsToWatchList(
+      List<WatchListWithUsersRecord> watchlistUserViewRecords,
       List<WatchListWithMediaRecord> watchListMediaViewRecords) {
-    int id = watchlistUserViewRecord.get(WATCH_LIST_WITH_USERS.WATCH_LIST_ID);
+
+    // collect basic WathcList information from the first record
+    WatchListWithUsersRecord watchlistUserViewRecord = watchlistUserViewRecords.get(0);
+    int watchListId = watchlistUserViewRecord.get(WATCH_LIST_WITH_USERS.WATCH_LIST_ID);
     String name = watchlistUserViewRecord.get(WATCH_LIST_WITH_USERS.NAME);
     String description = watchlistUserViewRecord.get(WATCH_LIST_WITH_USERS.DESCRIPTION);
     Instant created =
@@ -211,29 +216,62 @@ public class WatchlistServiceImpl implements WatchlistService {
     }
 
     // Reconstruct Users
-    User owner = userService.translateViewRecordToUser(watchlistUserViewRecord, "owner");
+    User owner = userService.translateViewRecordToUser(watchlistUserViewRecord, "owner", true);
+
     // TODO: implement readShared and writeShared
     Set<User> readShared = new HashSet<>();
+    for (WatchListWithUsersRecord watchListWithUsersRecord : watchlistUserViewRecords) {
+      User user = userService.translateViewRecordToUser(watchListWithUsersRecord, "read_user", false);
+      if (user != null) {
+        readShared.add(user);
+      }
+    }
+
     Set<User> writeShared = new HashSet<>();
 
     return new WatchList(
-        id, items, owner, readShared, writeShared, name, description, created, lastEdit, favorite);
+        watchListId,
+        items,
+        owner,
+        readShared,
+        writeShared,
+        name,
+        description,
+        created,
+        lastEdit,
+        favorite);
   }
 
   @Override
   public List<WatchList> getWatchListsForUser(User user) {
     Result<WatchListWithUsersRecord> watchListRecords = getWatchListsWithUsersByOwnerId(user.id());
     List<WatchList> watchLists = new ArrayList<>();
-    for (WatchListWithUsersRecord watchListRecord : watchListRecords) {
-      int id = watchListRecord.get(WATCH_LIST_WITH_USERS.WATCH_LIST_ID);
+    List<WatchListViewResult> watchListViews =
+        mapWatchListRecordsToWatchListViews(watchListRecords);
+
+    for (WatchListViewResult watchListViewResult : watchListViews) {
+      int id = (int) watchListViewResult.getId();
       Result<WatchListWithMediaRecord> watchListMediaViewRecords =
           fetchWatchListMediaByWatchListId(id);
       List<WatchListWithMediaRecord> watchListMediaViewRecordList =
           watchListMediaViewRecords.subList(0, watchListMediaViewRecords.size());
       watchLists.add(
-          translateViewRecordsToWatchList(watchListRecord, watchListMediaViewRecordList));
+          translateViewRecordsToWatchList(
+              watchListViewResult.getWatchlistUserViewRecords(), watchListMediaViewRecordList));
     }
     return watchLists;
+  }
+
+  private List<WatchListViewResult> mapWatchListRecordsToWatchListViews(
+      Result<WatchListWithUsersRecord> watchListRecords) {
+    Map<Long, WatchListViewResult> watchListMap = new HashMap<>();
+    for (WatchListWithUsersRecord watchListWithUsersRecord : watchListRecords) {
+      long watchListId = watchListWithUsersRecord.get(WATCH_LIST_WITH_USERS.WATCH_LIST_ID);
+      WatchListViewResult watchListViewResult =
+          watchListMap.computeIfAbsent(watchListId, WatchListViewResult::new);
+      watchListViewResult.addWatchlistUserViewRecord(watchListWithUsersRecord);
+    }
+    return new ArrayList<>(watchListMap.values());
   }
 
   @Override
@@ -287,21 +325,22 @@ public class WatchlistServiceImpl implements WatchlistService {
     Map<Long, WatchListViewResult> watchListMap = new HashMap<>();
     for (WatchListWithUsersRecord watchListWithUsersRecord : watchListWithUsersRecordResult) {
       long watchListId = watchListWithUsersRecord.get(WATCH_LIST_WITH_USERS.WATCH_LIST_ID);
-      WatchListViewResult watchListViewResult = watchListMap.get(watchListId);
-      watchListViewResult.setWatchlistUserViewRecord(watchListWithUsersRecord);
-      watchListMap.put(watchListId, watchListViewResult);
+      WatchListViewResult watchListViewResult =
+          watchListMap.computeIfAbsent(watchListId, WatchListViewResult::new);
+      watchListViewResult.addWatchlistUserViewRecord(watchListWithUsersRecord);
     }
 
     for (WatchListWithMediaRecord watchListMediaRecord : watchListMediaRecords) {
       long watchListId = watchListMediaRecord.get(WATCH_LIST_WITH_MEDIA.WATCH_LIST_ID);
-      WatchListViewResult watchListViewResult = watchListMap.get(watchListId);
+      WatchListViewResult watchListViewResult =
+          watchListMap.computeIfAbsent(watchListId, WatchListViewResult::new);
       watchListViewResult.addWatchListMediaViewRecord(watchListMediaRecord);
     }
 
     for (WatchListViewResult watchListViewResult : watchListMap.values()) {
       watchLists.add(
           translateViewRecordsToWatchList(
-              watchListViewResult.getWatchlistUserViewRecord(),
+              watchListViewResult.getWatchlistUserViewRecords(),
               watchListViewResult.getWatchListMediaViewRecords()));
     }
 
@@ -309,14 +348,42 @@ public class WatchlistServiceImpl implements WatchlistService {
   }
 
   @Override
-  public void shareWatchlist(WatchList watchlist, User selectedUser) {
-    var loggedInUser = userService.getLoggedInUser();
-    if (loggedInUser.username().equals(selectedUser.username())) {
+  public List<User> findSharedWithUsers(int watchListId) {
+    List<User> users = new ArrayList<>();
+
+    Result<WatchListReadSharedRecord> readSharedRecords =
+        create
+            .selectFrom(WATCH_LIST_READ_SHARED)
+            .where(WATCH_LIST_READ_SHARED.WATCH_LIST_ID.eq((long) watchListId))
+            .fetch();
+
+    // TODO: implement Write Share
+    readSharedRecords.forEach(
+        record -> {
+          long userId = record.get(WATCH_LIST_READ_SHARED.USER_ID);
+          User user = userService.getUserById(Math.toIntExact(userId));
+          if (user != null) {
+            users.add(user);
+          }
+        });
+
+    return users;
+  }
+
+  @Override
+  public void shareWatchlist(WatchList watchlist, User shareWith) {
+    var owner = watchlist.getOwner();
+    if (owner.id() == shareWith.id()) {
       throw new IllegalArgumentException("Cannot share with yourself");
     }
 
-    if (!watchlist.getOwner().username().equals(loggedInUser.username())) {
-      throw new IllegalArgumentException("Cannot share a watchlist you do not own");
+    User loggedInUser = userService.getLoggedInUser();
+    if (loggedInUser == null) {
+      throw new IllegalStateException("No logged in user");
+    }
+
+    if (loggedInUser.id() != owner.id()) {
+      throw new IllegalArgumentException("Only the owner can share the watchlist");
     }
 
     // verify the watchlist exists by fetching it
@@ -326,17 +393,17 @@ public class WatchlistServiceImpl implements WatchlistService {
     }
 
     // verify the user exists
-    if (!userService.userExists(selectedUser)) {
+    if (!userService.userExists(shareWith)) {
       throw new IllegalArgumentException("User does not exist");
     }
 
     // add the user to the readShared list
-    watchlist.getReadShared().add(selectedUser);
+    watchlist.getReadShared().add(shareWith);
     // add the user to the writeShared list
     create
-        .insertInto(WATCH_LIST_WRITE_SHARED)
-        .columns(WATCH_LIST_WRITE_SHARED.WATCH_LIST_ID, WATCH_LIST_WRITE_SHARED.USER_ID)
-        .values((long) watchlist.getId(), (long) selectedUser.id())
+        .insertInto(WATCH_LIST_READ_SHARED)
+        .columns(WATCH_LIST_READ_SHARED.WATCH_LIST_ID, WATCH_LIST_READ_SHARED.USER_ID)
+        .values((long) watchlist.getId(), (long) shareWith.id())
         .execute();
   }
 

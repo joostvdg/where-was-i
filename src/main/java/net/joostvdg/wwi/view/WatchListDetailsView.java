@@ -41,6 +41,7 @@ import net.joostvdg.wwi.media.VideoGameService;
 import net.joostvdg.wwi.progress.ProgressService;
 import net.joostvdg.wwi.shared.Labels;
 import net.joostvdg.wwi.shared.ViewNotifications;
+import net.joostvdg.wwi.user.User;
 import net.joostvdg.wwi.watchlist.WatchList;
 import net.joostvdg.wwi.watchlist.WatchlistService;
 import org.slf4j.Logger;
@@ -137,7 +138,7 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
     lastEditField.setReadOnly(true);
 
     TextField readSharedField = new TextField("Read Shared With");
-    readSharedField.setValue(watchList.getReadShared().size() + " users");
+    readSharedField.setValue(getReadSharedUsers(watchList));
     readSharedField.setReadOnly(true);
 
     TextField writeSharedField = new TextField("Write Shared With");
@@ -153,6 +154,18 @@ public class WatchListDetailsView extends VerticalLayout implements HasUrlParame
         lastEditField,
         readSharedField,
         writeSharedField);
+  }
+
+  private String getReadSharedUsers(WatchList watchList) {
+    // TODO: do we need it this way?
+    List<User> users = watchlistService.findSharedWithUsers(watchList.getId());
+    StringBuilder sharedUsers = new StringBuilder();
+    // TODO: we should finish the translateViewRecordsToWatchList of WatchListServiceImpl class
+    //    for(User user : watchList.getReadShared()) {
+    for (User user : users) {
+      sharedUsers.append(user.username()).append(", ");
+    }
+    return sharedUsers.toString();
   }
 
   private void configureProgressGrid() {

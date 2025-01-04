@@ -99,4 +99,16 @@ public class WatchList {
     this.items.add(newMediaItem);
     this.lastEdit = Instant.now(); // Update last edit timestamp
   }
+
+  @Override
+  public final boolean equals(Object o) {
+    if (!(o instanceof WatchList watchList)) return false;
+
+    return id == watchList.id;
+  }
+
+  @Override
+  public int hashCode() {
+    return id;
+  }
 }
