@@ -1,9 +1,22 @@
 LOCAL_VERSION = $(shell git describe --tags --always)
 VERSION ?= "0.1.0-$(LOCAL_VERSION)"
 export MAVEN_OPTS=-Xmx2048m
+
+## Local Postgres Config
 export JDBC_DATABASE_URL=jdbc:postgresql://localhost:6543/wherewasi
 export JDBC_DATABASE_USERNAME=wherewasi
 export JDBC_DATABASE_PASSWORD=wherewasi
+
+## Local LDAP Config
+export LDAP_ENABLED=true
+export LDAP_URL=ldap://localhost:389/dc=example,dc=org
+export LDAP_USER_DN_PATTERN=uid={0},ou=People
+export LDAP_USER_SEARCH_FILTER=uid={0}
+export LDAP_GROUP_SEARCH_BASE=ou=Groups
+export LDAP_GROUP_ROLE_ATTRIBUTE=cn
+export LDAP_MANAGER_DN=cn=admin,dc=example,dc=org
+export LDAP_MANAGER_PASSWORD=admin
+
 
 build:
 	mvnd verify -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
@@ -11,8 +24,11 @@ build:
 test:
 	mvnd test -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
 
+spotless:
+	mvnd spotless:apply
+
 run:
-	mvn spring-boot:run -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
+	mvnd spring-boot:run -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
 
 prod:
 	mvnd clean package -Pproduction -Dvaadin.force.production.build=true -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e

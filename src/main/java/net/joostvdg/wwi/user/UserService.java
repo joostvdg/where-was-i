@@ -16,7 +16,8 @@ public interface UserService {
 
   Optional<User> getUserForUsername(String username);
 
-  User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix, boolean fullUserData);
+  User translateViewRecordToUser(
+      Record watchlistUserViewRecord, String userDataPrefix, boolean fullUserData);
 
   User getUserById(int userId);
 }

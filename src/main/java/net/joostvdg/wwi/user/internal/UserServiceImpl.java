@@ -186,7 +186,8 @@ public class UserServiceImpl implements UserService {
   }
 
   @Override
-  public User translateViewRecordToUser(Record watchlistUserViewRecord, String userDataPrefix, boolean fullUser) {
+  public User translateViewRecordToUser(
+      Record watchlistUserViewRecord, String userDataPrefix, boolean fullUser) {
     if (watchlistUserViewRecord.get(userDataPrefix + "_id") == null) {
       return null;
     }
@@ -201,24 +202,20 @@ public class UserServiceImpl implements UserService {
 
     // The Read and Write shared users only have the id, name, and email in the View
     if (fullUser) {
-      accountNumber =
-              watchlistUserViewRecord.get(userDataPrefix + "_account_number", String.class);
-      accountType =
-              watchlistUserViewRecord.get(userDataPrefix + "_account_type", String.class);
+      accountNumber = watchlistUserViewRecord.get(userDataPrefix + "_account_number", String.class);
+      accountType = watchlistUserViewRecord.get(userDataPrefix + "_account_type", String.class);
       LocalDateTime dateTimeJoined =
-              watchlistUserViewRecord.get(userDataPrefix + "_date_joined", LocalDateTime.class);
+          watchlistUserViewRecord.get(userDataPrefix + "_date_joined", LocalDateTime.class);
       LocalDateTime dateTimeLastLogin =
-              watchlistUserViewRecord.get(userDataPrefix + "_date_last_login", LocalDateTime.class);
+          watchlistUserViewRecord.get(userDataPrefix + "_date_last_login", LocalDateTime.class);
       if (dateTimeJoined != null) {
         dateJoined = dateTimeJoined.toLocalDate();
       }
-
 
       if (dateTimeLastLogin != null) {
         dateLastLogin = dateTimeLastLogin.toLocalDate();
       }
     }
-
 
     return new User(
         userId, accountNumber, accountType, userDataPrefix, name, email, dateJoined, dateLastLogin);

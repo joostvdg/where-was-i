@@ -181,8 +181,7 @@ public class WatchlistServiceImpl implements WatchlistService {
         translateViewRecordsToWatchList(watchlistUserViewRecords, watchListMediaViewRecordList));
   }
 
-  private WatchList
-  translateViewRecordsToWatchList(
+  private WatchList translateViewRecordsToWatchList(
       List<WatchListWithUsersRecord> watchlistUserViewRecords,
       List<WatchListWithMediaRecord> watchListMediaViewRecords) {
 
@@ -221,7 +220,8 @@ public class WatchlistServiceImpl implements WatchlistService {
     // TODO: implement readShared and writeShared
     Set<User> readShared = new HashSet<>();
     for (WatchListWithUsersRecord watchListWithUsersRecord : watchlistUserViewRecords) {
-      User user = userService.translateViewRecordToUser(watchListWithUsersRecord, "read_user", false);
+      User user =
+          userService.translateViewRecordToUser(watchListWithUsersRecord, "read_user", false);
       if (user != null) {
         readShared.add(user);
       }

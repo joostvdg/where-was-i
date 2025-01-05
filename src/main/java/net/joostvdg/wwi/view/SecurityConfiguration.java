@@ -2,6 +2,7 @@
 package net.joostvdg.wwi.view;
 
 import com.vaadin.flow.spring.security.VaadinWebSecurity;
+import net.joostvdg.wwi.config.LdapConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,12 @@ public class SecurityConfiguration extends VaadinWebSecurity {
   private static final String LOGIN_URL = "/login";
   private final Logger logger = LoggerFactory.getLogger(SecurityConfiguration.class);
 
+  private final LdapConfig ldapConfig;
+
+  public SecurityConfiguration(LdapConfig ldapConfig) {
+    this.ldapConfig = ldapConfig;
+  }
+
   @Override
   protected void configure(HttpSecurity http) throws Exception {
     http.authorizeHttpRequests(
@@ -27,26 +34,40 @@ public class SecurityConfiguration extends VaadinWebSecurity {
     http.oauth2Login(
         httpSecurityOAuth2LoginConfigurer ->
             httpSecurityOAuth2LoginConfigurer.loginPage(LOGIN_URL).permitAll());
-    // http.oauth2Login().loginPage(LOGIN_URL).permitAll(); //Deprecated
-    http.formLogin(
-        httpSecurityOAuth2LoginConfigurer ->
-            httpSecurityOAuth2LoginConfigurer.loginPage(LOGIN_URL).permitAll());
-    // http.formLogin().loginPage(LOGIN_URL).permitAll();
+
+    if (ldapConfig.isLdapEnabled()) {
+      http.formLogin(
+          httpSecurityOAuth2LoginConfigurer ->
+              httpSecurityOAuth2LoginConfigurer.loginPage(LOGIN_URL).permitAll());
+    }
+
     setLoginView(http, LoginView.class);
   }
 
   @Autowired
   public void configure(AuthenticationManagerBuilder auth) throws Exception {
     logger.info("Configuring AuthenticationManagerBuilder");
+    if (!ldapConfig.isLdapEnabled()) {
+      logger.info("LDAP is not enabled, skipping configuration");
+      return;
+    }
+
+    // TODO: move to Debug logging
+    logger.info("LDAP is enabled, configuring LDAP authentication");
+    logger.info("LDAP URL: {}", ldapConfig.getLdapUrl());
+    logger.info("LDAP User DN Pattern: {}", ldapConfig.getLdapUserDnPattern());
+    logger.info("LDAP User Search Base: {}", ldapConfig.getLdapUserSearchFilter());
+    logger.info("LDAP Group Search Base: {}", ldapConfig.getLdapGroupSearchBase());
+    logger.info("LDAP Group Role Attribute: {}", ldapConfig.getLdapGroupRoleAttribute());
     auth.ldapAuthentication()
-        .userDnPatterns("ou=People")
-        .userSearchFilter("uid={0}")
-        .groupSearchBase("ou=Groups")
-        .groupRoleAttribute("cn")
+        .userDnPatterns(ldapConfig.getLdapUserDnPattern())
+        .userSearchFilter(ldapConfig.getLdapUserSearchFilter())
+        .groupSearchBase(ldapConfig.getLdapGroupSearchBase())
+        .groupRoleAttribute(ldapConfig.getLdapGroupRoleAttribute())
         .contextSource()
-        .url("ldap://localhost:389/dc=example,dc=org")
-        .managerDn("cn=admin,dc=example,dc=org")
-        .managerPassword("admin")
+        .url(ldapConfig.getLdapUrl())
+        .managerDn(ldapConfig.getLdapManagerDn())
+        .managerPassword(ldapConfig.getLdapManagerPassword())
         .and()
         .userDetailsContextMapper(new InetOrgPersonContextMapper());
   }

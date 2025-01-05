@@ -9,6 +9,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import java.io.Serial;
+import net.joostvdg.wwi.config.LdapConfig;
 
 @Route("login")
 @PageTitle("Login")
@@ -20,7 +21,7 @@ public class LoginView extends VerticalLayout {
   // URL that Spring Security uses to connect to Google services
   private static final String OAUTH_2_AUTHORIZATION_GITHUB = "/oauth2/authorization/github";
 
-  public LoginView() {
+  public LoginView(LdapConfig ldapConfig) {
     // Title for the login page
     H1 title = new H1("Login Page");
 
@@ -35,11 +36,13 @@ public class LoginView extends VerticalLayout {
     githubButton.getElement().setAttribute("theme", "primary");
 
     // LDAP Login Form
-    LoginForm ldapLoginForm = new LoginForm();
-    ldapLoginForm.setAction("login");
-
-    // Add components to the layout
-    add(title, githubButton, ldapLoginForm);
+    if (ldapConfig.isLdapEnabled()) {
+      LoginForm ldapLoginForm = new LoginForm();
+      ldapLoginForm.setAction("login");
+      add(title, githubButton, ldapLoginForm);
+    } else {
+      add(title, githubButton);
+    }
     setAlignItems(Alignment.CENTER);
   }
 }
