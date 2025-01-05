@@ -20,6 +20,7 @@ import net.joostvdg.wwi.model.wwi_progress.tables.records.MovieProgressRecord;
 import net.joostvdg.wwi.model.wwi_progress.tables.records.SeriesProgressRecord;
 import net.joostvdg.wwi.model.wwi_progress.tables.records.VideoGameProgressRecord;
 import net.joostvdg.wwi.model.wwi_watchlist.tables.records.*;
+import net.joostvdg.wwi.watchlist.SharedWatchListItem;
 import net.joostvdg.wwi.watchlist.WatchList;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.RuntimeHintsRegistrar;
@@ -52,6 +53,7 @@ import org.springframework.context.annotation.ImportRuntimeHints;
   WatchListSeriesRecord.class,
   WatchListVideoGamesRecord.class,
   AllProgressRecord.class,
+  SharedWatchListItem.class,
   org.jooq.Record.class,
   org.jooq.Result.class
 })
@@ -150,6 +152,11 @@ public class ReflectionConfiguration {
               INVOKE_PUBLIC_CONSTRUCTORS)
           .registerType(
               AllProgressRecord.class,
+              PUBLIC_FIELDS,
+              INVOKE_PUBLIC_METHODS,
+              INVOKE_PUBLIC_CONSTRUCTORS)
+          .registerType(
+              SharedWatchListItem.class,
               PUBLIC_FIELDS,
               INVOKE_PUBLIC_METHODS,
               INVOKE_PUBLIC_CONSTRUCTORS)

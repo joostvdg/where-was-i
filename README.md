@@ -13,9 +13,6 @@ The best way to create your own project based on this starter is [start.vaadin.c
 * Native Build
     * make sure build succeeds
     * verify that the application runs
-* make LDAP configurable
-    * ensure we can disable it
-    * ensure we can configure it with environment variables ? or config files?
 * Build with GitHub Actions
     * build the application
     * Setup SonarQube for code quality
@@ -25,6 +22,7 @@ The best way to create your own project based on this starter is [start.vaadin.c
     * push Docker Image to GitHub Container Registry
     * deploy to AWS ARM VM?
 * Deploy the application
+    * Fly.io
     * Homelab?
     * AWS ARM VM?
 * Manage the state of the application in a SQL database
