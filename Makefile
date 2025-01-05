@@ -1,5 +1,5 @@
 LOCAL_VERSION = $(shell git describe --tags --always)
-VERSION ?= "0.1.0-$(LOCAL_VERSION)"
+VERSION ?= "0.1.4-$(LOCAL_VERSION)"
 export MAVEN_OPTS=-Xmx2048m
 
 ## Local Postgres Config
@@ -51,12 +51,25 @@ nrun:
 		-Djdbc.database.url=jdbc:postgresql://localhost:6543/wherewasi \
 		-Djdbc.database.username=wherewasi \
 		-Djdbc.database.password=wherewasi
+
+ndocker:
+	docker buildx build \
+		-f Dockerfile.native \
+		--platform linux/amd64 \
+		--build-arg APP_FILE=where-was-i \
+		--tag ghcr.io/joostvdg/where-was-i:${VERSION} \
+		--provenance=false \
+		--sbom=false \
+		--push \
+		.
+
 # Spring Boot Native --> cannot work with Vaadin?
 #natives:
 #	mvn -Pproduction -Pnative spring-boot:build-image -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
 
+#   docker build -f Dockerfiles/Dockerfile.native --build-arg APP_FILE=benchmark-jibber -t jibber-benchmark:native.0.0.1-SNAPSHOT .
 docker:
-	docker buildx build . --platform linux/amd64 --tag ghcr.io/joostvdg/where-was-i:${VERSION} --provenance=false --sbom=false --push
+	docker buildx build --platform linux/amd64 --tag ghcr.io/joostvdg/where-was-i:${VERSION} --provenance=false --sbom=false --push
 
 drun:
 	docker run -i --rm \

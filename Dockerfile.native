@@ -1,0 +1,17 @@
+#FROM container-registry.oracle.com/os/oraclelinux:8-slim
+# https://www.graalvm.org/latest/reference-manual/native-image/guides/containerise-native-executable-and-run-in-docker-container/
+FROM bitnami/minideb:bookworm
+
+ENV PORT=8080
+ENV JDBC_DATABASE_URL="jdbc:postgresql://localhost:5432"
+ENV JDBC_DATABASE_USERNAME="wherewasi"
+ENV JDBC_DATABASE_PASSWORD="wherewasi"
+
+ARG APP_FILE
+EXPOSE 8080
+
+RUN install_packages libc6-dev libstdc++6 zlib1g
+
+ENTRYPOINT ["/app"]
+
+COPY target/${APP_FILE} app
