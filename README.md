@@ -7,26 +7,15 @@ The best way to create your own project based on this starter is [start.vaadin.c
 
 ## TODO
 
-* Input Validation
-    * https://github.com/secure-coding-practices
-    * looks like SQL Injection is not a problem, as JooQ automatically escapes and uses Prepared Statements
-* Native Build
-    * make sure build succeeds
-    * verify that the application runs
 * Build with GitHub Actions
-    * build the application
-    * Setup SonarQube for code quality
-    * Setup Snyk for security checks
-    * build Native Image
-    * build Docker Image
-    * push Docker Image to GitHub Container Registry
-    * deploy to AWS ARM VM?
 * Deploy the application
     * Fly.io
     * Homelab?
     * AWS ARM VM?
-* Manage the state of the application in a SQL database
-  * Use TestContainers for integration tests
+* Export / Import Database tests
+* Ability to remove items from the watchlist
+    * active/inactive 
+* Integration tests
 
 ## Native Image
 
