@@ -7,6 +7,10 @@ ENV JDBC_DATABASE_URL="jdbc:postgresql://localhost:5432"
 ENV JDBC_DATABASE_USERNAME="wherewasi"
 ENV JDBC_DATABASE_PASSWORD="wherewasi"
 
+LABEL org.opencontainers.image.source="https://github.com/joostvdg/where-was-i"
+LABEL org.opencontainers.image.licenses="MIT"
+LABEL org.opencontainers.image.title="where-was-i"
+
 ARG APP_FILE
 EXPOSE 8080
 
