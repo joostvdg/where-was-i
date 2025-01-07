@@ -36,5 +36,12 @@ jobs:
         run: mvn -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e clean verify
       - name: Build Native Binary  # https://graalvm.github.io/native-build-tools/latest/maven-plugin.html
         run: mvn -Pproduction  -Dvaadin.force.production.build=true -Pnative  -DskipTests=true  -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e clean native:compile
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
       - name: Build Native Image Container Image
         run: make ndocker
