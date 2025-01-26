@@ -5,6 +5,12 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'Makefile'
+      - '*.md'
+      - '.github/workflows/fly-deploy.yml'
+      - '.github/workflows/native-image.yml'
+
 jobs:
   build:
     name: Build with GraalVM

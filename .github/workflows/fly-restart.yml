@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: fly pg restart --app ${DB_APP_NAME} --access-token ${DB_ACCESS_TOKEN} --force
+      - run: flyctl pg restart --app ${DB_APP_NAME} --access-token ${DB_ACCESS_TOKEN} --force
         env:
           DB_APP_NAME: ${{ secrets.DB_APP_NAME }}
           DB_ACCESS_TOKEN: ${{ secrets.DB_ACCESS_TOKEN }}
