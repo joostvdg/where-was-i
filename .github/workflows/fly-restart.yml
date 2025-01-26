@@ -16,6 +16,7 @@ jobs:
         env:
           DB_APP_NAME: ${{ secrets.DB_APP_NAME }}
           DB_ACCESS_TOKEN: ${{ secrets.DB_ACCESS_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
 
   restart-application:
     name: Restart Application
@@ -29,3 +30,4 @@ jobs:
         env:
           APP_NAME: ${{ secrets.APP_NAME }}
           APP_ACCESS_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
