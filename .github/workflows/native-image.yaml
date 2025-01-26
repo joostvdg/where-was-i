@@ -5,6 +5,11 @@ on:
   push:
     branches:
       - main
+    paths-ignore:
+      - 'Makefile'
+      - '*.md'
+      - '.github/workflows/fly-deploy.yml'
+      - '.github/workflows/fly-restart.yml'
 
 # See official GraalVM Action: https://github.com/graalvm/setup-graalvm
 jobs:

@@ -8,47 +8,36 @@ on:
     paths-ignore:
       - 'Makefile'
       - '*.md'
-      - '.github/workflows/fly-deploy.yml'
+      - '.github/workflows/fly-restart.yml'
       - '.github/workflows/native-image.yml'
 
 jobs:
-  build:
-    name: Build with GraalVM
+  Build-and-Deploy:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Set up GraalVM
-        uses: graalvm/setup-graalvm@v1
+      - name: Install Tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+      - uses: graalvm/setup-graalvm@v1
         with:
           java-version: '23'      # See 'Options' for more details
-          distribution: 'graalvm-community' # See 'Supported distributions' for available options
+          distribution: 'graalvm' # See 'Supported distributions' for available options
           github-token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Set up Maven
-        uses: actions/setup-java@v3
-        with:
-          distribution: 'temurin'
-          java-version: '23'
-          cache: 'maven'
-      - name: Build with Maven
-        run: mvnd clean package -Pproduction -Dvaadin.force.production.build=true -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e
-      - name: Upload build artifact
-        uses: actions/upload-artifact@v3
-        with:
-          name: where-was-i-binary
-          path: target/where-was-i
-
-  deploy:
-    name: Deploy app
-    runs-on: ubuntu-latest
-    needs: build
-    concurrency: deploy-group    # optional: ensure only one action runs at a time
-    steps:
-      - uses: actions/checkout@v4
-      - name: Download build artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: where-was-i-binary
-          path: target/
+      - name: Verify Versions
+        run: |
+          echo "GRAALVM_HOME: $GRAALVM_HOME"
+          echo "JAVA_HOME: $JAVA_HOME"
+          java --version
+          native-image --version
+          docker compose version
+      - name: Docker Compose Initialization
+        run: docker compose up -d
+      - name: Build
+        run: mvn -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e clean verify
+      - name: Build Native Binary  # https://graalvm.github.io/native-build-tools/latest/maven-plugin.html
+        run: mvn -Pproduction  -Dvaadin.force.production.build=true -Pnative  -DskipTests=true  -Dparallel=all -DperCoreThreadCount=false -DthreadCount=16 -T 1C -e clean native:compile
       - uses: superfly/flyctl-actions/setup-flyctl@master
       - run: flyctl deploy --remote-only
         env:
