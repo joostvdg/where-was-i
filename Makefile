@@ -79,3 +79,5 @@ drun:
       -e JDBC_DATABASE_URL=jdbc:postgresql://where-was-i-postgres-1:5432/wherewasi \
       --network where-was-i_default \
       ghcr.io/joostvdg/where-was-i:${VERSION}
+
+## jdbc:postgresql://young-dawn-2346.internal:5432/postgres

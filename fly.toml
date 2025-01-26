@@ -1,0 +1,37 @@
+# fly.toml app configuration file generated for where-was-i-spring-smoke-305 on 2025-01-07T23:32:32+01:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'where-was-i-spring-smoke-305'
+primary_region = 'ams'
+
+[build]
+  dockerfile = "Dockerfile.native"
+
+[build.args]
+  APP_FILE = "where-was-i"
+
+[deploy]
+  strategy = "rolling"
+  max_unavailable = 1
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = 'suspend'
+  auto_start_machines = true
+  min_machines_running = 1
+  processes = ['app']
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+
+[[http_service.checks]]
+  grace_period = "10s"
+  interval = "30s"
+  method = "GET"
+  timeout = "5s"
+  path = "/"
