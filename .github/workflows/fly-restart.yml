@@ -1,0 +1,29 @@
+name: Manual Fly Restart
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restart-database:
+    name: Restart Database
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: fly pg restart --app ${DB_APP_NAME} --access-token ${DB_ACCESS_TOKEN} --force
+        env:
+          DB_APP_NAME: ${{ secrets.DB_APP_NAME }}
+          DB_ACCESS_TOKEN: ${{ secrets.DB_ACCESS_TOKEN }}
+
+  restart-application:
+    name: Restart Application
+    runs-on: ubuntu-latest
+    needs: restart-database
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl restart --app ${APP_NAME} --access-token ${APP_ACCESS_TOKEN} --force
+        env:
+          APP_NAME: ${{ secrets.APP_NAME }}
+          APP_ACCESS_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
