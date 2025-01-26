@@ -7,15 +7,11 @@ The best way to create your own project based on this starter is [start.vaadin.c
 
 ## TODO
 
-* Build with GitHub Actions
-* Deploy the application
-    * Fly.io
-    * Homelab?
-    * AWS ARM VM?
 * Export / Import Database tests
 * Ability to remove items from the watchlist
     * active/inactive 
 * Integration tests
+* Move Database to [Supabase](https://supabase.com/pricing)
 
 ## Native Image
 
