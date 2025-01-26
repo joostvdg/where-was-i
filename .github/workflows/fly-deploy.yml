@@ -14,6 +14,8 @@ on:
 jobs:
   Build-and-Deploy:
     runs-on: ubuntu-latest
+    environment:
+      name: FLY
     steps:
       - uses: actions/checkout@v4
       - name: Install Tools

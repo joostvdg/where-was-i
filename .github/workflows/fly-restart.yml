@@ -7,10 +7,12 @@ jobs:
   restart-database:
     name: Restart Database
     runs-on: ubuntu-latest
+    environment:
+      name: FLY
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl pg restart --app ${DB_APP_NAME} --access-token ${DB_ACCESS_TOKEN} --force
+      - run: flyctl pg restart --app ${DB_APP_NAME} --access-token ${DB_ACCESS_TOKEN} --force --verbose
         env:
           DB_APP_NAME: ${{ secrets.DB_APP_NAME }}
           DB_ACCESS_TOKEN: ${{ secrets.DB_ACCESS_TOKEN }}
@@ -23,7 +25,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: superfly/flyctl-actions/setup-flyctl@master
-      - run: flyctl restart --app ${APP_NAME} --access-token ${APP_ACCESS_TOKEN} --force
+      - run: flyctl restart --app ${APP_NAME} --access-token ${APP_ACCESS_TOKEN} --force --verbose
         env:
           APP_NAME: ${{ secrets.APP_NAME }}
           APP_ACCESS_TOKEN: ${{ secrets.APP_ACCESS_TOKEN }}
