@@ -15,7 +15,7 @@ jobs:
         uses: graalvm/setup-graalvm@v1
         with:
           version: '23'
-          java-version: '17'
+          java-version: '23'
       - name: Set up Maven
         uses: actions/setup-java@v3
         with:
