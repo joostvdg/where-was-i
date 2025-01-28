@@ -1,11 +1,11 @@
-name: Manual Fly Restart
+name: Manual Fly DB Backup
 
 on:
   workflow_dispatch:
 
 jobs:
-  restart-database:
-    name: Restart Database
+  backup-database:
+    name: Backup Database
     runs-on: ubuntu-latest
     environment:
       name: FLY
