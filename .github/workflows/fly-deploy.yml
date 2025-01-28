@@ -10,6 +10,7 @@ on:
       - '*.md'
       - '.github/workflows/fly-restart.yml'
       - '.github/workflows/native-image.yml'
+      - '.github/workflows/fly-db-backup.yml'
 
 jobs:
   Build-and-Deploy:

@@ -10,6 +10,7 @@ on:
       - '*.md'
       - '.github/workflows/fly-deploy.yml'
       - '.github/workflows/fly-restart.yml'
+      - '.github/workflows/fly-db-backup.yml'
 
 # See official GraalVM Action: https://github.com/graalvm/setup-graalvm
 jobs:

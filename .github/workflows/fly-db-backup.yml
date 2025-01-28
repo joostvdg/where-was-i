@@ -1,0 +1,65 @@
+name: Manual Fly Restart
+
+on:
+  workflow_dispatch:
+
+jobs:
+  restart-database:
+    name: Restart Database
+    runs-on: ubuntu-latest
+    environment:
+      name: FLY
+    steps:
+      - uses: actions/checkout@v4
+      - uses: superfly/flyctl-actions/setup-flyctl@master
+      - run: flyctl auth whoami
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+      - run: flyctl pg list
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: Start proxy in the background
+        run: |
+          flyctl proxy 15432:5433 --app ${DB_APP_NAME} &
+          echo $! > proxy_pid.txt
+        env:
+          DB_APP_NAME: ${{ secrets.DB_APP_NAME }}
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+
+      - name: install psql client
+        run: |
+          echo "deb [arch=amd64,arm64,ppc64el signed-by=/usr/share/keyrings/postgresql.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/postgresql.list
+          wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add - 
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+
+      - name: Backup database
+        run: |
+          export PATH=/usr/lib/postgresql/16/bin:$PATH
+          pg_dump --version
+          BACKUP_FILE="backup_file_$(date +'%Y%m%d').sql"
+          echo "BACKUP_FILE=$BACKUP_FILE" >> $GITHUB_ENV
+          PGPASSWORD=${{ secrets.DB_PASSWORD }} pg_dump -U postgres -h localhost -p 15432 postgres --data-only --inserts > $BACKUP_FILE
+        env:
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      - name: Stop proxy process
+        run: |
+          kill $(cat proxy_pid.txt)
+          rm proxy_pid.txt
+
+      - name: Install AWS CLI
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y awscli
+
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.WWI_AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.WWI_AWS_SECRET_ACCESS_KEY }}
+          aws configure set default.region eu-central-1
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp ${{ env.BACKUP_FILE }} s3://${{ secrets.WWI_AWS_S3_BUCKET }}/backups/
