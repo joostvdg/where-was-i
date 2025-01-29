@@ -49,10 +49,12 @@ jobs:
           kill $(cat proxy_pid.txt)
           rm proxy_pid.txt
 
-      - name: Install AWS CLI
+      - name: Verify AWS CLI
         run: |
-          sudo apt-get update
-          sudo apt-get install -y awscli
+#          sudo apt-get update
+#          sudo apt-get install -y awscli
+      # According to the docs the CLI is already installed
+          aws --version
 
       - name: Configure AWS CLI
         run: |
