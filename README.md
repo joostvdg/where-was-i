@@ -7,11 +7,33 @@ The best way to create your own project based on this starter is [start.vaadin.c
 
 ## TODO
 
+* Trigger Restart GHA from  Slack
 * Export / Import Database tests
 * Ability to remove items from the watchlist
     * active/inactive 
 * Integration tests
 * Move Database to [Supabase](https://supabase.com/pricing)
+
+## SlackBot for GHA
+
+Yes, you can use the GitHub Slack app to trigger GitHub Actions workflows directly from Slack. Here are the steps to set it up:
+
+1. **Install the GitHub Slack app**:
+  - Go to the [GitHub Slack app page](https://slack.github.com/) and click "Add to Slack".
+  - Follow the instructions to connect your GitHub account to Slack.
+
+2. **Configure the GitHub Slack app**:
+  - Once installed, you can configure the app to listen to specific repositories and channels.
+  - Use the `/github subscribe owner/repo` command in Slack to subscribe to a repository.
+
+3. **Trigger GitHub Actions workflows**:
+  - You can trigger workflows using the `/github run workflow` command.
+  - For example, to trigger a workflow named `build-and-deploy.yml`, you can use:
+    ```
+    /github run workflow build-and-deploy.yml
+    ```
+
+This setup allows you to manage and trigger your GitHub Actions workflows directly from Slack, making it easier to integrate your development workflow with your communication tools.
 
 ## Native Image
 
@@ -130,3 +152,27 @@ Vaadin web applications are full-stack and include both client-side and server-s
 - Find Add-ons at [vaadin.com/directory](https://vaadin.com/directory).
 - Ask questions on [Stack Overflow](https://stackoverflow.com/questions/tagged/vaadin) or join our [Discord channel](https://discord.gg/MYFq5RTbBn).
 - Report issues, create pull requests in [GitHub](https://github.com/vaadin/platform).
+
+
+## Setup GHA / S3
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": "s3:ListBucket",
+      "Resource": "arn:aws:s3:::where-was-i-backups"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject"
+      ],
+      "Resource": "arn:aws:s3:::where-was-i-backups/*"
+    }
+  ]
+}
+```
