@@ -13,4 +13,6 @@ public interface SeriesService {
   Media translateViewRecordToSeries(Record watchListViewMediaRecord);
 
   Optional<Series> findById(int id);
+
+  Series updateSeries(int id, Series updatedSeries);
 }

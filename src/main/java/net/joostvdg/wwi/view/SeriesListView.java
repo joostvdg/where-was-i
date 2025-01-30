@@ -215,7 +215,7 @@ public class SeriesListView extends VerticalLayout {
                         endYear,
                         Optional.of(tags));
                 newSeries = seriesService.addSeries(newSeries);
-                refreshGrid(newSeries);
+                refreshGridNew(newSeries);
                 ViewNotifications.showSuccessNotification(
                     "New series added and progress created for: " + title);
 
@@ -252,7 +252,22 @@ public class SeriesListView extends VerticalLayout {
     dialog.open();
   }
 
-  private void refreshGrid(Series newSeries) {
+  private void refreshGridUpdate(Series updatedSeries) {
+    var seriesList = dataProvider.getItems();
+    seriesList.stream()
+        .filter(series -> series.id() == updatedSeries.id())
+        .findFirst()
+        .ifPresent(
+            series -> {
+              seriesList.remove(series);
+              seriesList.add(updatedSeries);
+            });
+    dataProvider.refreshAll();
+    releaseYearFilter.setItems(getReleaseYears((List<Series>) seriesList));
+    genreFilter.setItems(getAllGenres((List<Series>) seriesList));
+  }
+
+  private void refreshGridNew(Series newSeries) {
     var seriesList = dataProvider.getItems();
     seriesList.add(newSeries);
     dataProvider.refreshAll();
@@ -409,13 +424,27 @@ public class SeriesListView extends VerticalLayout {
     FormLayout formLayout = new FormLayout();
 
     TextField titleField = new TextField(Labels.TITLE, series.title());
+    titleField.setValue(series.title());
     TextField platformField = new TextField(Labels.PLATFORM, series.platform());
+    platformField.setValue(series.platform());
     TextField genreField = new TextField(Labels.GENRES_INPUT, String.join(", ", series.genre()));
-    TextField releaseYearField =
-        new TextField(
-            Labels.RELEASE_YEAR, series.releaseYear().map(LocalDate::toString).orElse(""));
-    TextField endYearField =
-        new TextField(Labels.END_YEAR, series.endYear().map(LocalDate::toString).orElse(""));
+    genreField.setValue(String.join(", ", series.genre()));
+    TextField urlField = new TextField(Labels.URL_INPUT, series.url().orElse(""));
+    urlField.setValue(series.url().orElse(""));
+
+    String currentReleaseYear = "";
+    if (series.releaseYear().isPresent()) {
+      currentReleaseYear = series.releaseYear().get().getYear() + "";
+    }
+    TextField releaseYearField = new TextField(Labels.RELEASE_YEAR, currentReleaseYear);
+    releaseYearField.setValue(currentReleaseYear);
+
+    String currentEndYear = "";
+    if (series.endYear().isPresent()) {
+      currentEndYear = series.endYear().get().getYear() + "";
+    }
+    TextField endYearField = new TextField(Labels.END_YEAR, currentEndYear);
+    endYearField.setValue(currentEndYear);
 
     formLayout.add(titleField, platformField, genreField, releaseYearField, endYearField);
 
@@ -429,19 +458,99 @@ public class SeriesListView extends VerticalLayout {
           e -> series.seasons().put(season, Integer.parseInt(e.getValue())));
     }
 
+    Div seasonContainer = new Div();
+    Map<String, Integer> newSeasons = new HashMap<>();
+
+    Button addSeasonButton =
+        new Button(
+            "Add Season",
+            event -> {
+              int nextSeasonNumber =
+                  newSeasons.size() + series.seasons().size() + 1; // Calculate next season number
+              String nextSeasonName = "Season " + nextSeasonNumber;
+
+              // Create text fields for the new season
+              TextField nextSeasonField = new TextField(nextSeasonName);
+              nextSeasonField.setValue(nextSeasonName); // Name of the season
+              TextField nextEpisodesField = new TextField("Episodes (" + nextSeasonName + ")");
+              nextEpisodesField.setValue("10"); // set a default
+
+              // Add the new season to the container and the map
+              seasonContainer.add(nextSeasonField, nextEpisodesField);
+              newSeasons.put(nextSeasonName, Integer.parseInt(nextEpisodesField.getValue()));
+            });
+
+    // Save button to handle the creation of the Series
     Button saveButton =
         new Button(
             "Save",
             event -> {
-              // Logic for saving the edited series
-              seriesGrid.getDataProvider().refreshItem(series); // Refresh the item in the grid
-              Notification.show("Series updated!");
-              dialog.close();
+              try {
+                // Parse input values
+                String title = titleField.getValue();
+                String platform = platformField.getValue();
+                String[] genresArray =
+                    genreField.getValue().split(",\\s*"); // Split by comma and remove extra spaces
+                Set<String> genres = new HashSet<>(Arrays.asList(genresArray));
+
+                Optional<String> url =
+                    urlField.isEmpty() ? Optional.empty() : Optional.of(urlField.getValue());
+
+                int releaseYear = Integer.parseInt(releaseYearField.getValue());
+                LocalDate releaseDate = LocalDate.of(releaseYear, 1, 2); // Set to 02-01-<Year>
+
+                Optional<LocalDate> endYear =
+                    endYearField.isEmpty()
+                        ? Optional.empty()
+                        : Optional.of(
+                            LocalDate.of(Integer.parseInt(endYearField.getValue()), 1, 2));
+
+                // Create new Series and add it to the WatchList
+                // Please read the Series record, and generate a proper constructor call
+                var seasons = new HashMap<String, Integer>();
+                seasons.putAll(series.seasons());
+                seasons.putAll(newSeasons);
+
+                Series updatedSeries =
+                    new Series(
+                        series.id(),
+                        title,
+                        genres,
+                        seasons,
+                        platform,
+                        url,
+                        Optional.of(releaseDate),
+                        endYear,
+                        series.tags());
+
+                updatedSeries = seriesService.updateSeries(series.id(), updatedSeries);
+                refreshGridUpdate(updatedSeries);
+                Notification.show("Series updated!");
+
+                // Clear the fields
+                titleField.clear();
+                platformField.clear();
+                genreField.clear();
+                urlField.clear();
+                releaseYearField.clear();
+                endYearField.clear();
+                seasonContainer.removeAll();
+
+                // Close the dialog
+                dialog.close();
+              } catch (NumberFormatException e) {
+                ViewNotifications.showErrorNotification(
+                    "Invalid input for release year or number of episodes.");
+              }
             });
 
     Button cancelButton = new Button("Cancel", e -> dialog.close());
 
-    dialog.add(formLayout, new HorizontalLayout(saveButton, cancelButton));
+    dialog.add(
+        formLayout,
+        seasonContainer,
+        addSeasonButton,
+        new HorizontalLayout(saveButton, cancelButton));
     dialog.open();
   }
 

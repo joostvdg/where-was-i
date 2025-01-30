@@ -168,6 +168,45 @@ public class SeriesServiceImpl implements SeriesService {
     return Optional.empty();
   }
 
+  @Override
+  public Series updateSeries(int id, Series updatedSeries) {
+    // verify the series exists
+    SeriesRecord seriesRecord =
+        create.selectFrom(Tables.SERIES).where(Tables.SERIES.ID.eq(id)).fetchOne();
+    if (seriesRecord == null) {
+      throw new IllegalArgumentException("Series with id " + id + " does not exist");
+    }
+
+    // update the series
+    String tagsJson = "{}";
+    if (updatedSeries.tags().isPresent()) {
+      tagsJson = MediaHelper.translateTagsToJson(updatedSeries.tags().get());
+    }
+
+    create
+        .update(Tables.SERIES)
+        .set(Tables.SERIES.TITLE, updatedSeries.title())
+        .set(Tables.SERIES.GENRE, updatedSeries.genre().toArray(new String[0]))
+        .set(
+            Tables.SERIES.SEASONS,
+            JSONB.valueOf(MediaHelper.translateSeanonsToJson(updatedSeries.seasons())))
+        .set(Tables.SERIES.PLATFORM, updatedSeries.platform())
+        .set(Tables.SERIES.URL, updatedSeries.url().orElse(null))
+        .set(
+            Tables.SERIES.RELEASE_YEAR,
+            updatedSeries.releaseYear().map(LocalDate::getYear).orElse(null))
+        .set(Tables.SERIES.END_YEAR, updatedSeries.endYear().map(LocalDate::getYear).orElse(null))
+        .set(Tables.SERIES.TAGS, JSONB.valueOf(tagsJson))
+        .where(Tables.SERIES.ID.eq(id))
+        .execute();
+
+    Series updatedSeriesRecord = findSeriesById(id);
+    if (updatedSeriesRecord == null) {
+      throw new IllegalStateException("Series could not be updated (verification failed)");
+    }
+    return updatedSeriesRecord;
+  }
+
   private Series translateRecordToSeries(SeriesRecord seriesRecord) {
     Set<String> genre = Arrays.stream(seriesRecord.getGenre()).collect(Collectors.toSet());
     Map<String, Integer> seasons = new HashMap<>();
