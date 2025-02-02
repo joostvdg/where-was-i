@@ -1,0 +1,12 @@
+name: My Test Workflow
+
+on:
+  workflow_dispatch:
+
+jobs:
+  say-hello:
+    name: Restart Database
+    runs-on: ubuntu-latest
+    steps:
+        - name: Say Hello
+          run: echo "Hello, World!"

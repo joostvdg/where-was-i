@@ -11,6 +11,7 @@ on:
       - '.github/workflows/fly-deploy.yml'
       - '.github/workflows/fly-restart.yml'
       - '.github/workflows/fly-db-backup.yml'
+      - '.github/workflows/my-test-workflow.yml'
 
 # See official GraalVM Action: https://github.com/graalvm/setup-graalvm
 jobs:
