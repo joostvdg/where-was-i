@@ -30,7 +30,7 @@
         <spotless.version>2.43.0</spotless.version>
         <error-prone.version>2.36.0</error-prone.version>
         <flyway.version>10.17.0</flyway.version>
-        <postgres.version>42.7.4</postgres.version>
+        <postgres.version>42.7.7</postgres.version>
         <postgres.driver.version>42.7.4</postgres.driver.version>
         <vaadin.version>24.6.2</vaadin.version>
         <fastjson.version>2.0.52</fastjson.version>
